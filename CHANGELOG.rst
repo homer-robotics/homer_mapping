@@ -2,6 +2,11 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* more fixes
+* Contributors: Niklas Yann Wettengel
+
 0.1.2 (2016-11-03)
 ------------------
 * install launch files
