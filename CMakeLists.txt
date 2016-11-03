@@ -17,6 +17,7 @@ if (OPENMP_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 find_package(tf REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 set(CMAKE_BUILD_TYPE Release)
 
@@ -24,6 +25,7 @@ set(CMAKE_BUILD_TYPE Release)
 include_directories(
 	include
 	${catkin_INCLUDE_DIRS}
+	${EIGEN3_INCLUDE_DIRS}
 )
 
 catkin_package(
@@ -35,7 +37,7 @@ catkin_package(
 		nav_msgs
 		tf
 		roslib
-		LIBRARIES homerOccupancyMap homerParticleFilter
+	LIBRARIES homerOccupancyMap homerParticleFilter
 )
 
 add_library(homerOccupancyMap
