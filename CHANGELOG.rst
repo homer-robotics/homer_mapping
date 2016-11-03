@@ -2,8 +2,8 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.4 (2016-11-03)
+------------------
 * updated changelog
 * fixes
 * Contributors: Niklas Yann Wettengel
