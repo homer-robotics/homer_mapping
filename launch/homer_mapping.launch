@@ -1,0 +1,5 @@
+<launch>
+ <rosparam command="load" file="$(find homer_mapping)/config/homer_mapping.yaml"/>
+ <node name="homer_mapping" pkg="homer_mapping" type="homer_mapping" output="screen"/>
+ <node name="map_manager" pkg="homer_map_manager" type="map_manager" output="screen"/>
+</launch>
