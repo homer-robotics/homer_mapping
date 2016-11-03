@@ -4,6 +4,10 @@ Changelog for package homer_mapping
 
 Forthcoming
 -----------
+* updated changelog
+* fixes
+* Contributors: Niklas Yann Wettengel
+
 * fixes
 * Contributors: Niklas Yann Wettengel
 
