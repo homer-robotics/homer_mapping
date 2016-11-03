@@ -27,8 +27,6 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf/tf.h>
 
-#include <homer_tools/loadRosConfig.h>
-
 #include <homer_mapping/ParticleFilter/SlamFilter.h>
 #include <homer_mapping/ParticleFilter/HyperSlamFilter.h>
 #include <homer_nav_libs/Math/Box2D.h>

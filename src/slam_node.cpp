@@ -44,17 +44,17 @@ SlamNode::SlamNode(ros::NodeHandle* nh)
 void SlamNode::init()
 {
     double waitTime;
-    loadConfigValue("/particlefilter/wait_time", waitTime);
+	ros::param::get("/particlefilter/wait_time", waitTime);
     m_WaitDuration = ros::Duration(waitTime);
-    loadConfigValue("/selflocalization/scatter_var_xy", m_ScatterVarXY);
-    loadConfigValue("/selflocalization/scatter_var_theta", m_ScatterVarTheta);
+	ros::param::get("/selflocalization/scatter_var_xy", m_ScatterVarXY);
+	ros::param::get("/selflocalization/scatter_var_theta", m_ScatterVarTheta);
 
     m_DoMapping = true;
 
     int particleNum;
-    loadConfigValue("/particlefilter/particle_num", particleNum);
+	ros::param::get("/particlefilter/particle_num", particleNum);
     int particleFilterNum;
-    loadConfigValue("/particlefilter/hyper_slamfilter/particlefilter_num", particleFilterNum);
+	ros::param::get("/particlefilter/hyper_slamfilter/particlefilter_num", particleFilterNum);
     m_HyperSlamFilter = new HyperSlamFilter ( particleFilterNum, particleNum );
 
     m_ReferenceOdometryTime = ros::Time(0);

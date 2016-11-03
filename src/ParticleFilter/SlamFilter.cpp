@@ -20,23 +20,23 @@ SlamFilter::SlamFilter ( int particleNum ) : ParticleFilter<SlamParticle> ( part
   }
 
   float rotationErrorRotating = 0.0;
-  loadConfigValue("/particlefilter/error_values/rotation_error_rotating", rotationErrorRotating);
+  ros::param::get("/particlefilter/error_values/rotation_error_rotating", rotationErrorRotating);
   float rotationErrorTranslating = 0.0;
-  loadConfigValue("/particlefilter/error_values/rotation_error_translating", rotationErrorTranslating);
+  ros::param::get("/particlefilter/error_values/rotation_error_translating", rotationErrorTranslating);
   float translationErrorTranslating = 0.0;
-  loadConfigValue("/particlefilter/error_values/translation_error_translating", translationErrorTranslating);
+  ros::param::get("/particlefilter/error_values/translation_error_translating", translationErrorTranslating);
   float translationErrorRotating = 0.0;
-  loadConfigValue("/particlefilter/error_values/translation_error_translating", translationErrorRotating);
+  ros::param::get("/particlefilter/error_values/translation_error_translating", translationErrorRotating);
   float moveJitterWhileTurning = 0.0;
-  loadConfigValue("/particlefilter/error_values/move_jitter_while_turning", moveJitterWhileTurning);
-  loadConfigValue("/particlefilter/max_rotation_per_second", m_MaxRotationPerSecond);
+  ros::param::get("/particlefilter/error_values/move_jitter_while_turning", moveJitterWhileTurning);
+  ros::param::get("/particlefilter/max_rotation_per_second", m_MaxRotationPerSecond);
 
   int updateMinMoveAngleDegrees;
-  loadConfigValue("/particlefilter/update_min_move_angle", updateMinMoveAngleDegrees);
+  ros::param::get("/particlefilter/update_min_move_angle", updateMinMoveAngleDegrees);
   m_UpdateMinMoveAngle = Math::deg2Rad(updateMinMoveAngleDegrees);
-  loadConfigValue("/particlefilter/update_min_move_dist", m_UpdateMinMoveDistance);
+  ros::param::get("/particlefilter/update_min_move_dist", m_UpdateMinMoveDistance);
   double maxUpdateInterval;
-  loadConfigValue("/particlefilter/max_update_interval", maxUpdateInterval);
+  ros::param::get("/particlefilter/max_update_interval", maxUpdateInterval);
   m_MaxUpdateInterval = ros::Duration(maxUpdateInterval);
 
   setRotationErrorRotating ( rotationErrorRotating );
@@ -77,23 +77,23 @@ SlamFilter::SlamFilter ( SlamFilter& slamFilter ) : ParticleFilter<SlamParticle>
   }
 
   float rotationErrorRotating = 0.0;
-  loadConfigValue("/particlefilter/error_values/rotation_error_rotating", rotationErrorRotating);
+  ros::param::get("/particlefilter/error_values/rotation_error_rotating", rotationErrorRotating);
   float rotationErrorTranslating = 0.0;
-  loadConfigValue("/particlefilter/error_values/rotation_error_translating", rotationErrorTranslating);
+  ros::param::get("/particlefilter/error_values/rotation_error_translating", rotationErrorTranslating);
   float translationErrorTranslating = 0.0;
-  loadConfigValue("/particlefilter/error_values/translation_error_translating", translationErrorTranslating);
+  ros::param::get("/particlefilter/error_values/translation_error_translating", translationErrorTranslating);
   float translationErrorRotating = 0.0;
-  loadConfigValue("/particlefilter/error_values/translation_error_translating", translationErrorRotating);
+  ros::param::get("/particlefilter/error_values/translation_error_translating", translationErrorRotating);
   float moveJitterWhileTurning = 0.0;
-  loadConfigValue("/particlefilter/error_values/move_jitter_while_turning", moveJitterWhileTurning);
-  loadConfigValue("/particlefilter/max_rotation_per_second", m_MaxRotationPerSecond);
+  ros::param::get("/particlefilter/error_values/move_jitter_while_turning", moveJitterWhileTurning);
+  ros::param::get("/particlefilter/max_rotation_per_second", m_MaxRotationPerSecond);
 
   int updateMinMoveAngleDegrees;
-  loadConfigValue("/particlefilter/update_min_move_angle", updateMinMoveAngleDegrees);
+  ros::param::get("/particlefilter/update_min_move_angle", updateMinMoveAngleDegrees);
   m_UpdateMinMoveAngle = Math::deg2Rad(updateMinMoveAngleDegrees);
-  loadConfigValue("/particlefilter/update_min_move_dist", m_UpdateMinMoveDistance);
+  ros::param::get("/particlefilter/update_min_move_dist", m_UpdateMinMoveDistance);
   double maxUpdateInterval;
-  loadConfigValue("/particlefilter/max_update_interval", maxUpdateInterval);
+  ros::param::get("/particlefilter/max_update_interval", maxUpdateInterval);
   m_MaxUpdateInterval = ros::Duration(maxUpdateInterval);
 
   setRotationErrorRotating ( rotationErrorRotating );

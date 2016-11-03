@@ -14,7 +14,6 @@
 #include <tf/transform_listener.h>
 
 #include <homer_mapnav_msgs/ModifyMap.h>
-#include <homer_tools/loadRosConfig.h>
 #include <homer_nav_libs/tools.h>
 
 //uncomment this to get extended information on the tracer
@@ -91,9 +90,9 @@ OccupancyMap::~OccupancyMap()
 void OccupancyMap::initMembers()
 {
   float mapSize;
-  loadConfigValue("/homer_mapping/size", mapSize);
-  loadConfigValue("/homer_mapping/resolution", m_Resolution);
-  loadConfigValue("/homer_mapping/max_laser", m_LaserMaxRange, (float) 8.0);
+  ros::param::get("/homer_mapping/size", mapSize);
+  ros::param::get("/homer_mapping/resolution", m_Resolution);
+  ros::param::param("/homer_mapping/max_laser", m_LaserMaxRange, (float) 8.0);
 
   //add one safety pixel
   m_PixelSize = mapSize / m_Resolution + 1;
@@ -106,10 +105,10 @@ void OccupancyMap::initMembers()
   m_Origin.orientation.y = 0.0;
   m_Origin.orientation.z = 0.0;
 
-  loadConfigValue("/homer_mapping/backside_checking", m_BacksideChecking);
-  loadConfigValue("/homer_mapping/obstacle_borders", m_ObstacleBorders);
-  loadConfigValue("/homer_mapping/measure_sampling_step", m_MeasureSamplingStep);
-  loadConfigValue("/homer_mapping/laser_scanner/free_reading_distance", m_FreeReadingDistance);
+  ros::param::get("/homer_mapping/backside_checking", m_BacksideChecking);
+  ros::param::get("/homer_mapping/obstacle_borders", m_ObstacleBorders);
+  ros::param::get("/homer_mapping/measure_sampling_step", m_MeasureSamplingStep);
+  ros::param::get("/homer_mapping/laser_scanner/free_reading_distance", m_FreeReadingDistance);
 
   m_OccupancyProbability = new float[m_ByteSize];
   m_MeasurementCount = new unsigned short[m_ByteSize];
@@ -158,7 +157,7 @@ OccupancyMap& OccupancyMap::operator= ( const OccupancyMap & occupancyMap )
   m_PixelSize = occupancyMap.m_PixelSize;
   m_ByteSize = occupancyMap.m_ByteSize;
 
-  loadConfigValue("/homer_mapping/backside_checking", m_BacksideChecking);
+  ros::param::get("/homer_mapping/backside_checking", m_BacksideChecking);
 
   // re-allocate all arrays
   m_OccupancyProbability = new float[m_ByteSize];

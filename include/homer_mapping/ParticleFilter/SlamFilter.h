@@ -11,8 +11,6 @@
 #include <homer_nav_libs/Math/Transformation2D.h>
 #include <homer_nav_libs/Math/Math.h>
 
-#include <homer_tools/loadRosConfig.h>
-
 #include <tf/transform_broadcaster.h>
 
 #include <cmath>
