@@ -19,6 +19,10 @@ endif()
 find_package(tf REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
+
+
 set(CMAKE_BUILD_TYPE Release)
 
 
@@ -26,6 +30,8 @@ include_directories(
 	include
 	${catkin_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
+	${Qt5Core_INCLUDE_DIRS}
+	${Qt5Widgets_INCLUDE_DIRS}
 )
 
 catkin_package(
@@ -49,6 +55,8 @@ target_link_libraries(
 	homerOccupancyMap
 		${catkin_LIBRARIES}
 		${tf_LIBRARIES}
+		${Qt5Core_LIBRARIES}
+		${Qt5Widgets_LIBRARIES}
 )
 set(
 	ParticleFilter_SRC

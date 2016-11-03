@@ -21,6 +21,9 @@
   <build_depend>homer_mapnav_msgs</build_depend>
   <build_depend>cmake_modules</build_depend>
   <build_depend>eigen</build_depend>
+  <build_depend>libqt5-core</build_depend>
+  <build_depend>libqt5-gui</build_depend>
+  <build_depend>libqt5-widgets</build_depend>
  
 
   <run_depend>std_msgs</run_depend>
@@ -32,5 +35,8 @@
   <run_depend>homer_nav_libs</run_depend>
   <run_depend>homer_mapnav_msgs</run_depend>
   <run_depend>eigen</run_depend>
+  <run_depend>libqt5-core</run_depend>
+  <run_depend>libqt5-gui</run_depend>
+  <run_depend>libqt5-widgets</run_depend>
 
 </package>

@@ -6,7 +6,7 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
-#include <QImage>
+#include <QtGui/QImage>
 
 #include <Eigen/Geometry>
 
