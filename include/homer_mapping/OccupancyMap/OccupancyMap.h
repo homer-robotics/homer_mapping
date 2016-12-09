@@ -13,6 +13,7 @@
 #include <homer_nav_libs/Math/Box2D.h>
 
 #include <nav_msgs/OccupancyGrid.h>
+#include <nav_msgs/MapMetaData.h>
 #include <tf/transform_listener.h>
 
 #include <sensor_msgs/LaserScan.h>
@@ -91,7 +92,7 @@ class OccupancyMap {
     /**
      * Constructor for a loaded map.
      */
-    OccupancyMap(float*& occupancyProbability, geometry_msgs::Pose origin, float resolution, int pixelSize, Box2D<int> exploredRegion);
+    OccupancyMap(float*& occupancyProbability, geometry_msgs::Pose origin, float resolution, int width, int height, Box2D<int> exploredRegion);
 
     /**
      * Copy constructor, copies all members inclusive the arrays that lie behind the pointers.
@@ -170,7 +171,7 @@ class OccupancyMap {
     float computeScore( Pose robotPose, std::vector<MeasurePoint> measurePoints );
 
     /**
-     * @return QImage of size m_PixelSize, m_PixelSize with values of m_OccupancyProbability scaled to 0-254
+     * @return QImage of size m_metaData.width, m_metaData.height with values of m_OccupancyProbability scaled to 0-254
      */
     QImage getProbabilityQImage(int trancparencyThreshold, bool showInaccessible) const;
 
@@ -187,9 +188,9 @@ class OccupancyMap {
      * @param[out] data vector containing occupancy probabilities. 0 = free, 100 = occupied, -1 = NOT_KNOWN
      * @param[out] width Width of data array
      * @param[out] height Height of data array
-     * @param[out] resolution Resolution of the map (m_Resolution)
+     * @param[out] resolution Resolution of the map (m_metaData.resolution)
      */
-    void getOccupancyProbabilityImage(vector<int8_t> &data, int& width, int& height, float &resolution);
+    void getOccupancyProbabilityImage(vector<int8_t> &data, nav_msgs::MapMetaData& metaData);
 
     /**
      * This method marks free the position of the robot (according to its dimensions).
@@ -218,6 +219,8 @@ class OccupancyMap {
      * Sets cells of this map to free or occupied according to maskMap
      */
      void applyMasking(const nav_msgs::OccupancyGrid::ConstPtr &msg);
+
+	 void changeMapSize(int x_add_left, int y_add_up, int x_add_right, int y_add_down );
 
 
   protected:
@@ -297,22 +300,14 @@ class OccupancyMap {
      */
      void cleanUp();
 
-    /**
-     * Stores the size of one map pixel in m.
-     */
-    float m_Resolution;
+	/**
+	 * Stores the metadata of the map
+	 */
+	nav_msgs::MapMetaData m_metaData;
+
 
     /**
-     * Stores the origin of the map
-     */
-    geometry_msgs::Pose m_Origin;
-    /**
-     * Stores the width of the map in cell numbers.
-     */
-    int m_PixelSize;
-
-    /**
-     * Stores the size of the map arrays, i.e. m_PixelSize * m_PixelSize
+     * Stores the size of the map arrays, i.e. m_metaData.width * m_metaData.height
      * for faster computation.
      */
     unsigned m_ByteSize;
@@ -328,9 +323,6 @@ class OccupancyMap {
 
     // Counts how often a pixel is hit by a measurement that says the pixel is occupied.
     unsigned short* m_OccupancyCount;
-
-    // Counts how often a cell is marked as inaccessible via markInaccessible()
-    unsigned char* m_InaccessibleCount;
 
     // Used for setting flags for cells, that have been modified during the current update.
     unsigned char* m_CurrentChanges;

@@ -113,34 +113,23 @@ void SlamNode::callbackResetHigh(const std_msgs::Empty::ConstPtr& msg)
 void SlamNode::sendMapDataMessage(ros::Time mapTime)
 {
   std::vector<int8_t> mapData;
-  int width, height;
-  float resolution;
+  nav_msgs::MapMetaData metaData;
 
   OccupancyMap* occMap = m_HyperSlamFilter->getBestSlamFilter()->getLikeliestMap();
-  occMap->getOccupancyProbabilityImage (mapData, width, height, resolution);
+  occMap->getOccupancyProbabilityImage (mapData, metaData);
 
-  if ( width != height )
-  {
-    ROS_ERROR_STREAM("ERROR: Map is not quadratic! can not send map!");
-  }
-  else
+  //if ( width != height )
+  //{
+    //ROS_ERROR_STREAM("ERROR: Map is not quadratic! can not send map!");
+  //}
+  //else
   {
     nav_msgs::OccupancyGrid mapMsg;
     std_msgs::Header header;
     header.stamp = mapTime;
     header.frame_id = "map";
     mapMsg.header = header;
-    nav_msgs::MapMetaData mapMetaData;
-    mapMetaData.width = width;
-    mapMetaData.height = height;
-    mapMetaData.resolution = resolution;
-    mapMetaData.origin.position.x = -height*resolution/2;
-    mapMetaData.origin.position.y = -width*resolution/2;
-    mapMetaData.origin.orientation.w = 1.0;
-    mapMetaData.origin.orientation.x = 0.0;
-    mapMetaData.origin.orientation.y = 0.0;
-    mapMetaData.origin.orientation.z = 0.0;
-    mapMsg.info = mapMetaData;
+    mapMsg.info = metaData;
     mapMsg.data = mapData;
 
     m_SLAMMapPublisher.publish(mapMsg);
@@ -359,7 +348,7 @@ void SlamNode::callbackLoadedMap(const nav_msgs::OccupancyGrid::ConstPtr &msg)
          }
      }
      Box2D<int> exploredRegion = Box2D<int> ( minX, minY, maxX, maxY );
-     OccupancyMap* occMap = new OccupancyMap(map, msg->info.origin, res, width, exploredRegion);
+     OccupancyMap* occMap = new OccupancyMap(map, msg->info.origin, res, width, height, exploredRegion);
      m_HyperSlamFilter->setOccupancyMap( occMap );
      m_HyperSlamFilter->setMapping( false ); //is this already done by gui message?
      ROS_INFO_STREAM( "Replacing occupancy map" );
