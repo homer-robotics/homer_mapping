@@ -333,10 +333,6 @@ class OccupancyMap {
     /**
      * Store values from config files.
      */
-    // maximum valid range of one laser measurement
-    float m_LaserMaxRange;
-    //minimum valid range of one laser measurement
-    float m_LaserMinRange;
     //minimum range classified as free in case of errorneous laser measurement
     float m_FreeReadingDistance;
     //enables checking to avoid matching front- and backside of an obstacle, e.g. wall
@@ -348,9 +344,6 @@ class OccupancyMap {
     
     //bool to reset high_sensitive Areas on the next iteration
     bool m_reset_high;
-
-    //position of the laser scaner in base_link frame
-    geometry_msgs::Point m_LaserPos;
 
     /**
      * Defines a bounding box around the changes in the current map.

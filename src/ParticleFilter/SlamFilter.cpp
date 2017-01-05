@@ -318,18 +318,18 @@ void SlamFilter::filter (Pose currentPose, sensor_msgs::LaserScanConstPtr laserD
   // do not resample if move to small
   if ( sqr ( trans.x() ) + sqr ( trans.y() ) < MIN_MOVE_DISTANCE2 && sqr ( trans.theta() ) < MIN_TURN_DISTANCE2 )
   {
-    ROS_DEBUG_STREAM( "Move too small, will not resample." );
-    if ( m_EffectiveParticleNum < m_ParticleNum / 10 )
-    {
-      resample();
-      ROS_INFO_STREAM( "Particles too scattered, resampling." );
-      // filter steps
+	ROS_DEBUG_STREAM( "Move too small, will not resample." );
+	if ( m_EffectiveParticleNum < m_ParticleNum / 10 )
+	{
+	  resample();
+	  ROS_INFO_STREAM( "Particles too scattered, resampling." );
+	  // filter steps
 	  drift();
 	  measure();
 	  normalize();
 
 	  sort ( 0, m_ParticleNum - 1 );
-    }
+	}
   }
   else
   {
@@ -365,17 +365,19 @@ void SlamFilter::filter (Pose currentPose, sensor_msgs::LaserScanConstPtr laserD
 	else
 	{
 	  thetaPerSecond = trans.theta() / elapsedSeconds;
-	}    
+	}   
+   	float poseVarianceX, poseVarianceY;
+	getPoseVariances(50, poseVarianceX, poseVarianceY);	
     
-    m_LastUpdatePose = likeliestPose;
-    m_LastUpdateTime = measurementTime;
-    if ( std::fabs(thetaPerSecond) < m_MaxRotationPerSecond )
+    if ( std::fabs(thetaPerSecond) < m_MaxRotationPerSecond && poseVarianceX < 0.05 && poseVarianceY < 0.05 )
     {
       updateMap();
+	  m_LastUpdatePose = likeliestPose;
+	  m_LastUpdateTime = measurementTime;
     }
     else
     {
-      ROS_DEBUG_STREAM( "No mapping performed, rotation angle too big." );
+      ROS_WARN_STREAM( "No mapping performed, rotation angle too big." );
     }
   }
   else

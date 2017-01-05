@@ -312,10 +312,10 @@ void SlamNode::callbackLoadedMap(const nav_msgs::OccupancyGrid::ConstPtr &msg)
     float res = msg->info.resolution;
     int height = msg->info.height; // cell size
     int width = msg->info.width; //cell size
-    if(height!=width) {
-        ROS_ERROR("Height != width in loaded map");
-        return;
-    }
+    //if(height!=width) {
+        //ROS_ERROR("Height != width in loaded map");
+        //return;
+    //}
 
     //convert map vector from ros format to robbie probability array
     float* map = new float[msg->data.size()];

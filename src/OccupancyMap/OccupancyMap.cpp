@@ -37,19 +37,35 @@ const int LOADED_MEASURECOUNT = 10;
 
 OccupancyMap::OccupancyMap()
 {
+  float mapSize, resolution;
+  ros::param::get("/homer_mapping/size", mapSize);
+  ros::param::get("/homer_mapping/resolution", resolution);
+
+  //add one safety pixel
+  m_metaData.resolution = resolution;
+  m_metaData.width = mapSize / m_metaData.resolution + 1;
+  m_metaData.height = mapSize / m_metaData.resolution + 1;
+  m_ByteSize = m_metaData.width * m_metaData.height;
+
+  m_metaData.origin.position.x = - (m_metaData.width * m_metaData.resolution / 2.0);
+  m_metaData.origin.position.y = - (m_metaData.height * m_metaData.resolution / 2.0);
+  m_metaData.origin.orientation.w = 1.0;
+  m_metaData.origin.orientation.x = 0.0;
+  m_metaData.origin.orientation.y = 0.0;
+  m_metaData.origin.orientation.z = 0.0;
   initMembers();
 }
 
 OccupancyMap::OccupancyMap(float *&occupancyProbability, geometry_msgs::Pose origin, float resolution, int width, int height, Box2D<int> exploredRegion)
 {
-    initMembers();
-
-
     m_metaData.origin = origin;
     m_metaData.resolution = resolution;
 	m_metaData.width = width;
 	m_metaData.height = height;
     m_ByteSize = m_metaData.width * m_metaData.height;
+    initMembers();
+
+
     m_ExploredRegion = exploredRegion;
     m_ChangedRegion = exploredRegion;
 
@@ -76,8 +92,6 @@ OccupancyMap::OccupancyMap ( const OccupancyMap& occupancyMap )
   m_OccupancyCount = 0;
   m_CurrentChanges = 0;
   m_HighSensitive = 0;
-  m_LaserMaxRange = 0;
-  m_LaserMinRange = 0;
 
   *this = occupancyMap;
 }
@@ -89,23 +103,6 @@ OccupancyMap::~OccupancyMap()
 
 void OccupancyMap::initMembers()
 {
-  float mapSize, resolution;
-  ros::param::get("/homer_mapping/size", mapSize);
-  ros::param::get("/homer_mapping/resolution", resolution);
-  ros::param::param("/homer_mapping/max_laser", m_LaserMaxRange, (float) 8.0);
-
-  //add one safety pixel
-  m_metaData.resolution = resolution;
-  m_metaData.width = mapSize / m_metaData.resolution + 1;
-  m_metaData.height = mapSize / m_metaData.resolution + 1;
-  m_ByteSize = m_metaData.width * m_metaData.height;
-
-  m_metaData.origin.position.x = - (m_metaData.width * m_metaData.resolution / 2.0);
-  m_metaData.origin.position.y = - (m_metaData.height * m_metaData.resolution / 2.0);
-  m_metaData.origin.orientation.w = 1.0;
-  m_metaData.origin.orientation.x = 0.0;
-  m_metaData.origin.orientation.y = 0.0;
-  m_metaData.origin.orientation.z = 0.0;
 
   ros::param::get("/homer_mapping/backside_checking", m_BacksideChecking);
   ros::param::get("/homer_mapping/obstacle_borders", m_ObstacleBorders);
@@ -134,8 +131,11 @@ void OccupancyMap::initMembers()
   	bool got_transform = m_tfListener.waitForTransform("/base_link","/laser", ros::Time(0), ros::Duration(1));
   	while(!got_transform); 	
   	{
-  		ROS_ERROR_STREAM("need transformation from base_link to laser!");
   		got_transform = m_tfListener.waitForTransform("/base_link","/laser", ros::Time(0), ros::Duration(1));
+  		if(!got_transform)
+		{
+			ROS_ERROR_STREAM("need transformation from base_link to laser!");
+		}
   	}
   	
     m_tfListener.lookupTransform("/base_link", "/laser", ros::Time(0), m_laserTransform);
@@ -213,16 +213,21 @@ void OccupancyMap::changeMapSize( int x_add_left, int y_add_up, int x_add_right,
 	  }
   }
 
+  m_ExploredRegion.setMinX( m_ExploredRegion.minX() + x_add_left);
+  m_ExploredRegion.setMaxX( m_ExploredRegion.maxX() + x_add_left);
+  m_ExploredRegion.setMinY( m_ExploredRegion.minY() + y_add_up);
+  m_ExploredRegion.setMaxY( m_ExploredRegion.maxY() + y_add_up);
+
+  m_ChangedRegion.setMinX( m_ChangedRegion.minX() + x_add_left);
+  m_ChangedRegion.setMaxX( m_ChangedRegion.maxX() + x_add_left);
+  m_ChangedRegion.setMinY( m_ChangedRegion.minY() + y_add_up);
+  m_ChangedRegion.setMaxY( m_ChangedRegion.maxY() + y_add_up);
+
 
   m_metaData.width = new_width; 
   m_metaData.height = new_height;
-  //m_metaData.origin.position.x = - (m_metaData.width * m_metaData.resolution / 2.0);
-  //m_metaData.origin.position.y = - (m_metaData.height * m_metaData.resolution / 2.0);
   m_metaData.origin.position.x -= (x_add_left ) * m_metaData.resolution;
   m_metaData.origin.position.y -= (y_add_up ) * m_metaData.resolution;
-
-  ROS_INFO_STREAM(" "<<m_metaData.origin.position);
-
 
   cleanUp();
 
@@ -231,6 +236,8 @@ void OccupancyMap::changeMapSize( int x_add_left, int y_add_up, int x_add_right,
   m_OccupancyCount =  OccupancyCount;  
   m_CurrentChanges =  CurrentChanges;  
   m_HighSensitive = HighSensitive; 
+
+ 
 
 }
 
@@ -246,11 +253,11 @@ int OccupancyMap::height() const
 
 float OccupancyMap::getOccupancyProbability ( Eigen::Vector2i p )
 {
-  unsigned offset = m_metaData.width * p.y() + p.x();
-  if ( offset > unsigned ( m_ByteSize ) )
+  if(p.y() >= m_metaData.height || p.x() >= m_metaData.width)
   {
-    return UNKNOWN_LIKELIHOOD;
+  	return UNKNOWN_LIKELIHOOD;
   }
+  unsigned offset = m_metaData.width * p.y() + p.x();
   return m_OccupancyProbability[ offset ];
 }
 
@@ -270,6 +277,16 @@ void OccupancyMap::computeOccupancyProbabilities()
       int i = x + yOffset;
       if ( m_MeasurementCount[i] > 0 )
       {
+		int maxCount = 100; //TODO param
+		if(m_MeasurementCount[i] > maxCount * 2 -1)
+		{
+			int scalingFactor = m_MeasurementCount[i] / maxCount;
+			if ( scalingFactor != 0 )
+			{
+				m_MeasurementCount[i] /= scalingFactor;
+				m_OccupancyCount[i] /= scalingFactor;
+			}
+		}
         m_OccupancyProbability[i] = m_OccupancyCount[i] / static_cast<float>  	( m_MeasurementCount[i] );
 		if (m_HighSensitive[i] == 1)
 		{
@@ -304,15 +321,7 @@ void OccupancyMap::computeOccupancyProbabilities()
 void OccupancyMap::insertLaserData ( sensor_msgs::LaserScan::ConstPtr laserData, tf::Transform transform)
 {
   m_latestMapTransform = transform;
-  markRobotPositionFree();
-  ros::Time stamp = laserData->header.stamp;
-
-  //m_LaserMaxRange = laserData->range_max;
-  m_LaserMinRange = laserData->range_min;
-
-
-  m_LaserPos.x = m_laserTransform.getOrigin().getX();
-  m_LaserPos.y = m_laserTransform.getOrigin().getY();
+  //markRobotPositionFree();
 
   std::vector<RangeMeasurement> ranges;
   ranges.reserve ( laserData->ranges.size() );
@@ -322,11 +331,12 @@ void OccupancyMap::insertLaserData ( sensor_msgs::LaserScan::ConstPtr laserData,
   float lastValidRange=m_FreeReadingDistance;
 
   RangeMeasurement rangeMeasurement;
-  rangeMeasurement.sensorPos = m_LaserPos;
+  rangeMeasurement.sensorPos.x = m_laserTransform.getOrigin().getX();
+  rangeMeasurement.sensorPos.y = m_laserTransform.getOrigin().getY();
   
   for ( unsigned int i = 0; i < laserData->ranges.size(); i++ )
   {
-    if ( ( laserData->ranges[i] >= m_LaserMinRange ) && ( laserData->ranges[i] <= m_LaserMaxRange ) )
+    if ( ( laserData->ranges[i] >= laserData->range_min ) && ( laserData->ranges[i] <= laserData->range_max ) )
     {
       //if we're at the end of an errorneous segment, interpolate
       //between last valid point and current point
@@ -335,55 +345,42 @@ void OccupancyMap::insertLaserData ( sensor_msgs::LaserScan::ConstPtr laserData,
         //smaller of the two ranges belonging to end points
         float range = Math::min ( lastValidRange, laserData->ranges[i] );
         range -= m_metaData.resolution * 2;
-
         if ( range < m_FreeReadingDistance )
         {
           range = m_FreeReadingDistance;
         }
         else
-          if ( range > m_LaserMaxRange )
+          if ( range > laserData->range_max )
           {
-            range = m_LaserMaxRange;
+            range = laserData->range_max;
           }
-
         //choose smaller range
         for ( unsigned j=lastValidIndex+1; j<i; j++ )
         {  
 			float alpha = laserData->angle_min + j * laserData->angle_increment;
-			geometry_msgs::Point point;
 			tf::Vector3 pin;
 			tf::Vector3 pout;
 			pin.setX( cos(alpha) * range);
 			pin.setY( sin(alpha) * range);
 			pin.setZ(0);
-
 			pout = m_laserTransform * pin;
-
-			point.x = pout.x();
-			point.y = pout.y();
-
-			rangeMeasurement.endPos = point;
+			rangeMeasurement.endPos.x = pout.x();
+			rangeMeasurement.endPos.y = pout.y();
 			rangeMeasurement.free = true;
 			ranges.push_back ( rangeMeasurement );
         }                             
       }
 	  float alpha = laserData->angle_min + i * laserData->angle_increment;
-	  geometry_msgs::Point point;
 	  tf::Vector3 pin;
 	  tf::Vector3 pout;
 	  pin.setX( cos(alpha) * laserData->ranges[i]);
 	  pin.setY( sin(alpha) * laserData->ranges[i]);
 	  pin.setZ(0);
-
 	  pout = m_laserTransform * pin;
-
-	  point.x = pout.x();
-	  point.y = pout.y();
-
-	  rangeMeasurement.endPos = point;
+	  rangeMeasurement.endPos.x = pout.x();
+	  rangeMeasurement.endPos.y = pout.y();
       rangeMeasurement.free = false;
       ranges.push_back ( rangeMeasurement );
-
       errorFound=false;
       lastValidIndex=i;
       lastValidRange=laserData->ranges[i];
@@ -394,23 +391,17 @@ void OccupancyMap::insertLaserData ( sensor_msgs::LaserScan::ConstPtr laserData,
     }
   }
 
-//  if ( errorFound )
-//  {
-//    for ( unsigned j=lastValidIndex+1; j<laserData->ranges.size(); j++ )
-//    {
-//      rangeMeasurement.endPos = map_tools::laser_range_to_point(m_FreeReadingDistance, j, laserData->angle_min, laserData->angle_increment, m_tfListener, laserData->header.frame_id, "/base_link"); //
-
-//      rangeMeasurement.free = true;
-//      ranges.push_back ( rangeMeasurement );
-//    }
-//  }
-
   insertRanges ( ranges , laserData->header.stamp);
+
 }
 
 
 void OccupancyMap::insertRanges ( vector<RangeMeasurement> ranges, ros::Time stamp )
 {
+	if(ranges.size() < 1)
+	{
+		return;
+	}
   clearChanges();
 
   Eigen::Vector2i lastEndPixel;
@@ -419,117 +410,101 @@ void OccupancyMap::insertRanges ( vector<RangeMeasurement> ranges, ros::Time sta
   int need_y_up = 0;
   int need_y_down = 0;
 
-  //paint safety borders
-  if ( m_ObstacleBorders )
+  std::vector<Eigen::Vector2i> map_pixel;
+
+  for(int i = 0; i < ranges.size(); i++)
   {
-	  for ( unsigned i=0; i<ranges.size(); i++ )
-	  {
-		  geometry_msgs::Point endPosWorld = map_tools::transformPoint(ranges[i].endPos, m_latestMapTransform);
-		  Eigen::Vector2i endPixel = map_tools::toMapCoords(endPosWorld, m_metaData.origin, m_metaData.resolution);
-
-		  for ( int y=endPixel.y()-1; y <= endPixel.y() +1; y++ )
-		  {
-			  if(y > m_metaData.height) continue;
-			  for ( int x=endPixel.x()-1; x <= endPixel.x() +1; x++ )
-			  {
-				  if(x > m_metaData.width) continue;
-				  unsigned offset=x+m_metaData.width*y;
-				  if ( offset < unsigned ( m_ByteSize ) )
-				  {
-					  m_CurrentChanges[ offset ] = SAFETY_BORDER;
-				  }
-			  }
-		  }
-	  }
+	  geometry_msgs::Point endPosWorld = map_tools::transformPoint(ranges[i].endPos, m_latestMapTransform);
+	  map_pixel.push_back(map_tools::toMapCoords(endPosWorld, m_metaData.origin, m_metaData.resolution));
   }
-  //paint safety ranges
-  for ( unsigned i=0; i<ranges.size(); i++ )
-  {
-	  geometry_msgs::Point startPosWorld = map_tools::transformPoint(ranges[i].endPos, m_latestMapTransform);
-	  Eigen::Vector2i startPixel = map_tools::toMapCoords(startPosWorld, m_metaData.origin, m_metaData.resolution);
-	  geometry_msgs::Point endPos;
-	  endPos.x = ranges[i].endPos.x * 4;
-	  endPos.y = ranges[i].endPos.y * 4;
+	  geometry_msgs::Point sensorPosWorld = map_tools::transformPoint(ranges[0].sensorPos, m_latestMapTransform);
+	  Eigen::Vector2i sensorPixel = map_tools::toMapCoords(sensorPosWorld, m_metaData.origin, m_metaData.resolution);
+	  m_ChangedRegion.enclose ( sensorPixel.x(), sensorPixel.y() );
 
-	  geometry_msgs::Point endPosWorld = map_tools::transformPoint(endPos, m_latestMapTransform);
-	  Eigen::Vector2i endPixel = map_tools::toMapCoords(endPosWorld, m_metaData.origin, m_metaData.resolution);
+  ////paint safety borders
+  //if ( m_ObstacleBorders )
+  //{
+	  //for ( unsigned i=0; i<ranges.size(); i++ )
+	  //{
+		  //Eigen::Vector2i endPixel = map_pixel[i];
+
+		  //for ( int y=endPixel.y()-1; y <= endPixel.y() +1; y++ )
+		  //{
+			  //if(y > m_metaData.height) continue;
+			  //for ( int x=endPixel.x()-1; x <= endPixel.x() +1; x++ )
+			  //{
+				  //if(x > m_metaData.width) continue;
+				  //unsigned offset=x+m_metaData.width*y;
+				  //if ( offset < unsigned ( m_ByteSize ) )
+				  //{
+					  //m_CurrentChanges[ offset ] = SAFETY_BORDER;
+				  //}
+			  //}
+		  //}
+	  //}
+  //}
+  ////paint safety ranges
+  //for ( unsigned i=0; i<ranges.size(); i++ )
+  //{
+	  //Eigen::Vector2i startPixel = map_pixel[i];
+	  //geometry_msgs::Point endPos;
+	  //endPos.x = ranges[i].endPos.x * 4;
+	  //endPos.y = ranges[i].endPos.y * 4;
+
+	  //geometry_msgs::Point endPosWorld = map_tools::transformPoint(endPos, m_latestMapTransform);
+	  //Eigen::Vector2i endPixel = map_tools::toMapCoords(endPosWorld, m_metaData.origin, m_metaData.resolution);
 
 
-	  if(endPixel.x() < 0) endPixel.x() = 0;
-	  if(endPixel.y() < 0) endPixel.y() = 0;
-	  if(endPixel.x() >= m_metaData.width) endPixel.x() = m_metaData.width - 1;
-	  if(endPixel.y() >= m_metaData.height) endPixel.y() = m_metaData.height - 1;
+	  //if(endPixel.x() < 0) endPixel.x() = 0;
+	  //if(endPixel.y() < 0) endPixel.y() = 0;
+	  //if(endPixel.x() >= m_metaData.width) endPixel.x() = m_metaData.width - 1;
+	  //if(endPixel.y() >= m_metaData.height) endPixel.y() = m_metaData.height - 1;
 
-	  drawLine ( m_CurrentChanges, startPixel, endPixel, SAFETY_BORDER );
-  }
+	  //drawLine ( m_CurrentChanges, startPixel, endPixel, SAFETY_BORDER );
+  //}
 
   //paint end pixels
   for ( unsigned i=0; i<ranges.size(); i++ )
   {
-	  if ( !ranges[i].free )
-	  {
-		  geometry_msgs::Point endPosWorld = map_tools::transformPoint(ranges[i].endPos, m_latestMapTransform);
-		  Eigen::Vector2i endPixel = map_tools::toMapCoords(endPosWorld, m_metaData.origin, m_metaData.resolution);
-
-		  if ( endPixel != lastEndPixel )
-		  {
-			  bool outside = false;
-			  if(endPixel.x() >= m_metaData.width)
-			  {	
-				  need_x_right = std::max((int)( endPixel.x() - m_metaData.width + 10), need_x_right);
-				  outside = true;
-			  }
-			  if(endPixel.x() < 0)
-			  {
-				  need_x_left =  std::max((int)(-endPixel.x()) + 10, need_x_left);
-				  outside = true;
-			  }
-			  if(endPixel.y() >= m_metaData.height)
-			  {
-				  need_y_down = std::max((int)(endPixel.y() - m_metaData.height) + 10, need_y_down);
-				  outside = true;
-			  }
-			  if(endPixel.y() < 0)
-			  {
-				  need_y_up = std::max((int)(- endPixel.y()) + 10, need_y_up);
-				  outside = true;
-			  }
-			  if(outside)
-			  {
-				  continue;
-			  }
-			  unsigned offset = endPixel.x() + m_metaData.width * endPixel.y();
-			  if ( offset < m_ByteSize )
-			  {
-				  m_CurrentChanges[ offset ] = ::OCCUPIED;
-			  }
-		  }
-		  lastEndPixel=endPixel;
-	  }
-  }
-
-  //paint free ranges
-  geometry_msgs::Point sensorPosWorld = map_tools::transformPoint(ranges[0].sensorPos, m_latestMapTransform);
-  Eigen::Vector2i sensorPixel = map_tools::toMapCoords(sensorPosWorld, m_metaData.origin, m_metaData.resolution);
-
-  for ( unsigned i=0; i<ranges.size(); i++ )
-  {
-	  geometry_msgs::Point endPosWorld = map_tools::transformPoint(ranges[i].endPos, m_latestMapTransform);
-	  Eigen::Vector2i endPixel = map_tools::toMapCoords(endPosWorld, m_metaData.origin, m_metaData.resolution);
-
-	  m_ChangedRegion.enclose ( sensorPixel.x(), sensorPixel.y() );
-	  m_ChangedRegion.enclose ( endPixel.x(), endPixel.y() );
-
-	  if(endPixel.x() < 0) endPixel.x() = 0;
-	  if(endPixel.y() < 0) endPixel.y() = 0;
-	  if(endPixel.x() >= m_metaData.width) endPixel.x() = m_metaData.width - 1;
-	  if(endPixel.y() >= m_metaData.height) endPixel.y() = m_metaData.height - 1;
+	  Eigen::Vector2i endPixel = map_pixel[i];
 
 	  if ( endPixel != lastEndPixel )
 	  {
+		  bool outside = false;
+		  if(endPixel.x() >= m_metaData.width)
+		  {	
+			  need_x_right = std::max((int)( endPixel.x() - m_metaData.width + 10), need_x_right);
+			  outside = true;
+		  }
+		  if(endPixel.x() < 0)
+		  {
+			  need_x_left =  std::max((int)(-endPixel.x()) + 10, need_x_left);
+			  outside = true;
+		  }
+		  if(endPixel.y() >= m_metaData.height)
+		  {
+			  need_y_down = std::max((int)(endPixel.y() - m_metaData.height) + 10, need_y_down);
+			  outside = true;
+		  }
+		  if(endPixel.y() < 0)
+		  {
+			  need_y_up = std::max((int)(- endPixel.y()) + 10, need_y_up);
+			  outside = true;
+		  }
+		  if(outside)
+		  {
+			  continue;
+		  }
+		  m_ChangedRegion.enclose ( endPixel.x(), endPixel.y() );
+		  //paint free ranges
 		  drawLine ( m_CurrentChanges, sensorPixel, endPixel, ::FREE );
-	  }
 
+		  if ( !ranges[i].free )
+		  {
+			  unsigned offset = endPixel.x() + m_metaData.width * endPixel.y();
+			  m_CurrentChanges[ offset ] = ::OCCUPIED;
+		  }
+	  }
 	  lastEndPixel=endPixel;
   }
 
@@ -539,6 +514,18 @@ void OccupancyMap::insertRanges ( vector<RangeMeasurement> ranges, ros::Time sta
   computeOccupancyProbabilities();
   if(need_x_left + need_x_right + need_y_down + need_y_up > 0)
   {
+      //keep square aspect ration till homer_gui can handle other maps
+      int need_x = need_x_left + need_x_right; 
+      int need_y = need_y_up + need_y_down;
+      if(need_x > need_y)
+      {
+        need_y_down += need_x - need_y;
+      }
+      else if (need_y > need_x)
+      {
+        need_x_right += need_y - need_x;
+      }
+
 	  ROS_INFO_STREAM("new map size!");
 	  ROS_INFO_STREAM(" "<<need_x_left<<" "<<need_y_up<<" "<<need_x_right<<" "<<need_y_down);
 	  changeMapSize(need_x_left, need_y_up, need_x_right, need_y_down);
@@ -598,16 +585,13 @@ vector<MeasurePoint> OccupancyMap::getMeasurePoints (sensor_msgs::LaserScanConst
 
   double minDist = m_MeasureSamplingStep;
 
-  //m_LaserMaxRange = laserData->range_max;
-  m_LaserMinRange = laserData->range_min;
-
   Point2D lastHitPos;
   Point2D lastUsedHitPos;
 
   //extract points for measuring
   for ( unsigned int i=0; i < laserData->ranges.size(); i++ )
   {
-    if ( laserData->ranges[i] <= m_LaserMaxRange && laserData->ranges[i] >= m_LaserMinRange )
+    if ( laserData->ranges[i] <= laserData->range_max && laserData->ranges[i] >= laserData->range_min )
     {
 		float alpha = laserData->angle_min + i * laserData->angle_increment;
 		tf::Vector3 pin;
@@ -821,10 +805,10 @@ void OccupancyMap::drawLine ( DataT* data, Eigen::Vector2i& startPixel, Eigen::V
 
 void OccupancyMap::applyChanges()
 {
-  for ( int y = m_ChangedRegion.minY(); y <= m_ChangedRegion.maxY(); y++ )
+  for ( int y = m_ChangedRegion.minY()+1; y <= m_ChangedRegion.maxY()-1; y++ )
   {
     int yOffset = m_metaData.width * y;
-    for ( int x = m_ChangedRegion.minX(); x <= m_ChangedRegion.maxX(); x++ )
+    for ( int x = m_ChangedRegion.minX()+1; x <= m_ChangedRegion.maxX()-1; x++ )
     {
       int i = x + yOffset;
       if ( ( m_CurrentChanges[i] == ::FREE || m_CurrentChanges[i] == ::OCCUPIED ) && m_MeasurementCount[i] < SHRT_MAX )
@@ -833,10 +817,28 @@ void OccupancyMap::applyChanges()
       }
       if ( m_CurrentChanges[i] == ::OCCUPIED && m_OccupancyCount[i] < USHRT_MAX )
       {
-        m_OccupancyCount[i]++;
+		
+		if(m_MeasurementCount[x + m_metaData.width * (y+1)] > 1)
+				m_MeasurementCount[x + m_metaData.width * (y+1)]++;
+		if(m_MeasurementCount[x + m_metaData.width * (y-1)] > 1)
+				m_MeasurementCount[x + m_metaData.width * (y-1)]++;
+		if(m_MeasurementCount[i-1] > 1)
+			m_MeasurementCount[i-1]++;
+		if(m_MeasurementCount[i+1] > 1)
+			m_MeasurementCount[i+1]++;
+        m_OccupancyCount[i] += 4;
       }
     }
   }
+  for ( int y = m_ChangedRegion.minY()+1; y <= m_ChangedRegion.maxY()-1; y++ )
+  {
+    int yOffset = m_metaData.width * y;
+    for ( int x = m_ChangedRegion.minX()+1; x <= m_ChangedRegion.maxX()-1; x++ )
+    {
+      int i = x + yOffset;
+		if(m_OccupancyCount[i]> m_MeasurementCount[i])
+	m_OccupancyCount[i]=m_MeasurementCount[i];
+}}
 }
 
 void OccupancyMap::clearChanges()
@@ -857,29 +859,30 @@ void OccupancyMap::clearChanges()
 
 void OccupancyMap::incrementMeasurementCount ( Eigen::Vector2i p )
 {
-  unsigned index = p.x() + m_metaData.width * p.y();
-  if ( index < m_ByteSize )
-  {
-    if ( m_CurrentChanges[index] == NO_CHANGE && m_MeasurementCount[index] < USHRT_MAX )
-    {
-      m_CurrentChanges[index] = ::FREE;
-      m_MeasurementCount[index]++;
-    }
-  }
-  else
-  {
-    ROS_ERROR( "Index out of bounds: x = %d, y = %d", p.x(), p.y() );
-  }
+	if(p.x() >= m_metaData.width || p.y() >= m_metaData.height)
+	{
+		return;
+	}
+	unsigned index = p.x() + m_metaData.width * p.y();
+	if ( m_CurrentChanges[index] == NO_CHANGE && m_MeasurementCount[index] < USHRT_MAX )
+	{
+		m_CurrentChanges[index] = ::FREE;
+		m_MeasurementCount[index]++;
+	}
 }
 
 void OccupancyMap::incrementOccupancyCount ( Eigen::Vector2i p )
 {
-  int index = p.x() + m_metaData.width * p.y();
-  if ( ( m_CurrentChanges[index] == NO_CHANGE || m_CurrentChanges[index] == ::FREE ) && m_MeasurementCount[index] < USHRT_MAX )
-  {
-    m_CurrentChanges[index] = ::OCCUPIED;
-    m_OccupancyCount[index]++;
-  }
+	if(p.x() >= m_metaData.width || p.y() >= m_metaData.height)
+	{
+		return;
+	}
+	unsigned index = p.x() + m_metaData.width * p.y();
+	if ( ( m_CurrentChanges[index] == NO_CHANGE || m_CurrentChanges[index] == ::FREE ) && m_MeasurementCount[index] < USHRT_MAX )
+	{
+		m_CurrentChanges[index] = ::OCCUPIED;
+		m_OccupancyCount[index]++;
+	}
 }
 
 void OccupancyMap::scaleDownCounts ( int maxCount )
