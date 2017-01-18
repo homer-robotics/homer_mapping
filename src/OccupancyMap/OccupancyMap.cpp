@@ -515,16 +515,16 @@ void OccupancyMap::insertRanges ( vector<RangeMeasurement> ranges, ros::Time sta
   if(need_x_left + need_x_right + need_y_down + need_y_up > 0)
   {
       //keep square aspect ration till homer_gui can handle other maps
-      int need_x = need_x_left + need_x_right; 
-      int need_y = need_y_up + need_y_down;
-      if(need_x > need_y)
-      {
-        need_y_down += need_x - need_y;
-      }
-      else if (need_y > need_x)
-      {
-        need_x_right += need_y - need_x;
-      }
+      //int need_x = need_x_left + need_x_right; 
+      //int need_y = need_y_up + need_y_down;
+      //if(need_x > need_y)
+      //{
+        //need_y_down += need_x - need_y;
+      //}
+      //else if (need_y > need_x)
+      //{
+        //need_x_right += need_y - need_x;
+      //}
 
 	  ROS_INFO_STREAM("new map size!");
 	  ROS_INFO_STREAM(" "<<need_x_left<<" "<<need_y_up<<" "<<need_x_right<<" "<<need_y_down);
