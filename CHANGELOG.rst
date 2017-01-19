@@ -4,6 +4,14 @@ Changelog for package homer_mapping
 
 Forthcoming
 -----------
+* cool changelogs
+* navigation with dynamic maps
+* dynamic masking map
+* no more squared maps
+* dynamic map size and wall kernel
+* dynamic map size
+* Contributors: Lisa
+
 * navigation with dynamic maps
 * dynamic masking map
 * no more squared maps
