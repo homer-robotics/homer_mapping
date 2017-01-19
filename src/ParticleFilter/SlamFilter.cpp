@@ -4,7 +4,7 @@
 // minimum move for translation in m
 const float MIN_MOVE_DISTANCE2 = 0.001 * 0.001;
 // minimum turn in radiants
-const float MIN_TURN_DISTANCE2 = 0.001 * 0.001;
+const float MIN_TURN_DISTANCE2 = 0.01 * 0.01;
 
 const float M_2PI = 2 * M_PI;
 
@@ -50,6 +50,7 @@ SlamFilter::SlamFilter ( int particleNum ) : ParticleFilter<SlamParticle> ( part
 
   m_EffectiveParticleNum = m_ParticleNum;
   m_LastUpdateTime = ros::Time(0);
+  m_LastMoveTime = ros::Time::now();
 }
 
 SlamFilter::SlamFilter ( SlamFilter& slamFilter ) : ParticleFilter<SlamParticle> ( slamFilter.m_ParticleNum )
@@ -315,8 +316,9 @@ void SlamFilter::filter (Pose currentPose, sensor_msgs::LaserScanConstPtr laserD
 
   Transformation2D trans = m_CurrentPoseOdometry - m_ReferencePoseOdometry;
 
-  // do not resample if move to small
-  if ( sqr ( trans.x() ) + sqr ( trans.y() ) < MIN_MOVE_DISTANCE2 && sqr ( trans.theta() ) < MIN_TURN_DISTANCE2 )
+  // do not resample if move to small and last move is min 0.5 sec away
+  if ( sqr ( trans.x() ) + sqr ( trans.y() ) < MIN_MOVE_DISTANCE2 && sqr ( trans.theta() ) < MIN_TURN_DISTANCE2 && (ros::Time::now() - m_LastMoveTime).toSec() > 1.0 )
+  //if(false)
   {
 	ROS_DEBUG_STREAM( "Move too small, will not resample." );
 	if ( m_EffectiveParticleNum < m_ParticleNum / 10 )
@@ -333,6 +335,10 @@ void SlamFilter::filter (Pose currentPose, sensor_msgs::LaserScanConstPtr laserD
   }
   else
   {
+      if(!( sqr ( trans.x() ) + sqr ( trans.y() ) < MIN_MOVE_DISTANCE2 && sqr ( trans.theta() ) < MIN_TURN_DISTANCE2 ))
+      {
+        m_LastMoveTime = ros::Time::now();
+      }
     resample();
     // filter steps
 	drift();

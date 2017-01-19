@@ -312,6 +312,8 @@ class SlamFilter : public ParticleFilter<SlamParticle> {
      */
     ros::Time m_LastUpdateTime;
 
+    ros::Time m_LastMoveTime;
+
     /**
      * Calculates the square of given input f
      * @param f input

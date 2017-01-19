@@ -277,16 +277,16 @@ void OccupancyMap::computeOccupancyProbabilities()
       int i = x + yOffset;
       if ( m_MeasurementCount[i] > 0 )
       {
-		int maxCount = 100; //TODO param
-		if(m_MeasurementCount[i] > maxCount * 2 -1)
-		{
-			int scalingFactor = m_MeasurementCount[i] / maxCount;
-			if ( scalingFactor != 0 )
-			{
-				m_MeasurementCount[i] /= scalingFactor;
-				m_OccupancyCount[i] /= scalingFactor;
-			}
-		}
+		//int maxCount = 100; //TODO param
+		//if(m_MeasurementCount[i] > maxCount * 2 -1)
+		//{
+			//int scalingFactor = m_MeasurementCount[i] / maxCount;
+			//if ( scalingFactor != 0 )
+			//{
+				//m_MeasurementCount[i] /= scalingFactor;
+				//m_OccupancyCount[i] /= scalingFactor;
+			//}
+		//}
         m_OccupancyProbability[i] = m_OccupancyCount[i] / static_cast<float>  	( m_MeasurementCount[i] );
 		if (m_HighSensitive[i] == 1)
 		{
@@ -321,7 +321,7 @@ void OccupancyMap::computeOccupancyProbabilities()
 void OccupancyMap::insertLaserData ( sensor_msgs::LaserScan::ConstPtr laserData, tf::Transform transform)
 {
   m_latestMapTransform = transform;
-  //markRobotPositionFree();
+  markRobotPositionFree();
 
   std::vector<RangeMeasurement> ranges;
   ranges.reserve ( laserData->ranges.size() );
@@ -818,15 +818,15 @@ void OccupancyMap::applyChanges()
       if ( m_CurrentChanges[i] == ::OCCUPIED && m_OccupancyCount[i] < USHRT_MAX )
       {
 		
-		//if(m_MeasurementCount[x + m_metaData.width * (y+1)] > 1)
-				//m_MeasurementCount[x + m_metaData.width * (y+1)]++;
-		//if(m_MeasurementCount[x + m_metaData.width * (y-1)] > 1)
-				//m_MeasurementCount[x + m_metaData.width * (y-1)]++;
-		//if(m_MeasurementCount[i-1] > 1)
-			//m_MeasurementCount[i-1]++;
-		//if(m_MeasurementCount[i+1] > 1)
-			//m_MeasurementCount[i+1]++;
-        m_OccupancyCount[i] ++;
+        //if(m_MeasurementCount[x + m_metaData.width * (y+1)] > 1)
+                //m_MeasurementCount[x + m_metaData.width * (y+1)]++;
+        //if(m_MeasurementCount[x + m_metaData.width * (y-1)] > 1)
+                //m_MeasurementCount[x + m_metaData.width * (y-1)]++;
+        //if(m_MeasurementCount[i-1] > 1)
+            //m_MeasurementCount[i-1]++;
+        //if(m_MeasurementCount[i+1] > 1)
+            //m_MeasurementCount[i+1]++;
+        m_OccupancyCount[i]++ ;
       }
     }
   }
@@ -921,12 +921,12 @@ void OccupancyMap::markRobotPositionFree()
   geometry_msgs::Point endPosWorld = map_tools::transformPoint(point, m_latestMapTransform);
   Eigen::Vector2i robotPixel = map_tools::toMapCoords(endPosWorld, m_metaData.origin, m_metaData.resolution);
 
-  int width = 0.3 / m_metaData.resolution;
+  int width = 0.35 / m_metaData.resolution;
   for ( int i = robotPixel.y() - width; i <= robotPixel.y() + width; i++ )
   {
     for ( int j = robotPixel.x() - width; j <= robotPixel.x() + width; j++ )
     {
-      incrementMeasurementCount ( Eigen::Vector2i ( i, j ) );
+      incrementMeasurementCount ( Eigen::Vector2i ( j, i ) );
     }
   }
   Box2D<int> robotBox ( robotPixel.x()-width, robotPixel.y()-width, robotPixel.x() +width, robotPixel.y() +width );
