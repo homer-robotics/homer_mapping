@@ -818,15 +818,15 @@ void OccupancyMap::applyChanges()
       if ( m_CurrentChanges[i] == ::OCCUPIED && m_OccupancyCount[i] < USHRT_MAX )
       {
 		
-		if(m_MeasurementCount[x + m_metaData.width * (y+1)] > 1)
-				m_MeasurementCount[x + m_metaData.width * (y+1)]++;
-		if(m_MeasurementCount[x + m_metaData.width * (y-1)] > 1)
-				m_MeasurementCount[x + m_metaData.width * (y-1)]++;
-		if(m_MeasurementCount[i-1] > 1)
-			m_MeasurementCount[i-1]++;
-		if(m_MeasurementCount[i+1] > 1)
-			m_MeasurementCount[i+1]++;
-        m_OccupancyCount[i] += 4;
+		//if(m_MeasurementCount[x + m_metaData.width * (y+1)] > 1)
+				//m_MeasurementCount[x + m_metaData.width * (y+1)]++;
+		//if(m_MeasurementCount[x + m_metaData.width * (y-1)] > 1)
+				//m_MeasurementCount[x + m_metaData.width * (y-1)]++;
+		//if(m_MeasurementCount[i-1] > 1)
+			//m_MeasurementCount[i-1]++;
+		//if(m_MeasurementCount[i+1] > 1)
+			//m_MeasurementCount[i+1]++;
+        m_OccupancyCount[i] ++;
       }
     }
   }
