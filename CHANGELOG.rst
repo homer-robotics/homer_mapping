@@ -2,8 +2,8 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.11 (2017-01-19)
+-------------------
 * cool changelogs
 * navigation with dynamic maps
 * dynamic masking map
