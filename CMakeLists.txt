@@ -19,6 +19,11 @@ endif()
 find_package(tf REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+# eigen 3.2 (wily) only provdies EIGEN3_INCLUDE_DIR, not EIGEN3_INCLUDE_DIRS
+if(NOT EIGEN3_INCLUDE_DIRS)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+endif()
+
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
 
