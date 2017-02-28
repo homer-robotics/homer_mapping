@@ -369,8 +369,13 @@ int main(int argc, char** argv)
 
     SlamNode slamNode(&nh);
 
-    ros::Rate loop_rate(50); 
-    ros::spin();
+    ros::Rate loop_rate(160); 
+
+    while(ros::ok())
+    {
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
     return 0;
 }
 
