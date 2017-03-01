@@ -128,22 +128,15 @@ void SlamNode::sendMapDataMessage(ros::Time mapTime) {
         m_HyperSlamFilter->getBestSlamFilter()->getLikeliestMap();
     occMap->getOccupancyProbabilityImage(mapData, metaData);
 
-    // if ( width != height )
-    //{
-    // ROS_ERROR_STREAM("ERROR: Map is not quadratic! can not send map!");
-    //}
-    // else
-    {
-        nav_msgs::OccupancyGrid mapMsg;
-        std_msgs::Header header;
-        header.stamp = mapTime;
-        header.frame_id = "map";
-        mapMsg.header = header;
-        mapMsg.info = metaData;
-        mapMsg.data = mapData;
+    nav_msgs::OccupancyGrid mapMsg;
+    std_msgs::Header header;
+    header.stamp = mapTime;
+    header.frame_id = "map";
+    mapMsg.header = header;
+    mapMsg.info = metaData;
+    mapMsg.data = mapData;
 
-        m_SLAMMapPublisher.publish(mapMsg);
-    }
+    m_SLAMMapPublisher.publish(mapMsg);
 }
 
 void SlamNode::callbackUserDefPose(const geometry_msgs::Pose::ConstPtr& msg) {
