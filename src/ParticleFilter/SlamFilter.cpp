@@ -339,8 +339,8 @@ void SlamFilter::filter(Pose currentPose,
            << " dist=" << transSinceLastUpdate.magnitude() << "m" << endl;
 
     bool update =
-        (std::fabs(transSinceLastUpdate.theta()) > m_UpdateMinMoveAngle) ||
-        (transSinceLastUpdate.magnitude() > m_UpdateMinMoveDistance) ||
+        ((std::fabs(transSinceLastUpdate.theta()) > m_UpdateMinMoveAngle) ||
+         (transSinceLastUpdate.magnitude() > m_UpdateMinMoveDistance)) &&
         ((measurementTime - m_LastUpdateTime) > m_MaxUpdateInterval);
 
     if (m_DoMapping && update) {
