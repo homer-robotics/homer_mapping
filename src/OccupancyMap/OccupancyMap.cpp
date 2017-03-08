@@ -323,6 +323,7 @@ void OccupancyMap::insertLaserData(sensor_msgs::LaserScan::ConstPtr laserData,
                     pout = m_laserTransform * pin;
                     rangeMeasurement.endPos.x = pout.x();
                     rangeMeasurement.endPos.y = pout.y();
+                    rangeMeasurement.range = range;
                     rangeMeasurement.free = true;
                     ranges.push_back(rangeMeasurement);
                 }
@@ -336,6 +337,7 @@ void OccupancyMap::insertLaserData(sensor_msgs::LaserScan::ConstPtr laserData,
             pout = m_laserTransform * pin;
             rangeMeasurement.endPos.x = pout.x();
             rangeMeasurement.endPos.y = pout.y();
+            rangeMeasurement.range = laserData->ranges[i];
             rangeMeasurement.free = false;
             ranges.push_back(rangeMeasurement);
             errorFound = false;
@@ -448,14 +450,31 @@ void OccupancyMap::insertRanges(vector<RangeMeasurement> ranges,
                 continue;
             }
             m_ChangedRegion.enclose(endPixel.x(), endPixel.y());
-            // paint free ranges
-            drawLine(m_CurrentChanges, sensorPixel, endPixel, ::FREE);
 
             if (!ranges[i].free) {
                 unsigned offset =
                     endPixel.x() + m_metaData.width * endPixel.y();
-                m_CurrentChanges[offset] = ::OCCUPIED;
+                if (ranges[i].range < 10) {
+                    m_CurrentChanges[offset] = ::OCCUPIED;
+                } else {
+                    m_CurrentChanges[offset] = ::SAFETY_BORDER;
+                }
             }
+        }
+        lastEndPixel = endPixel;
+    }
+
+    // paint free pixels
+    for (unsigned i = 0; i < ranges.size(); i++) {
+        Eigen::Vector2i endPixel = map_pixel[i];
+
+        if (endPixel != lastEndPixel) {
+            if (endPixel.x() >= m_metaData.width || endPixel.x() < 0 ||
+                endPixel.y() >= m_metaData.height || endPixel.y() < 0) {
+                continue;
+            }
+            // paint free ranges
+            drawLine(m_CurrentChanges, sensorPixel, endPixel, ::FREE);
         }
         lastEndPixel = endPixel;
     }
@@ -466,21 +485,9 @@ void OccupancyMap::insertRanges(vector<RangeMeasurement> ranges,
     applyChanges();
     computeOccupancyProbabilities();
     if (need_x_left + need_x_right + need_y_down + need_y_up > 0) {
-        // keep square aspect ration till homer_gui can handle other maps
-        // int need_x = need_x_left + need_x_right;
-        // int need_y = need_y_up + need_y_down;
-        // if(need_x > need_y)
-        //{
-        // need_y_down += need_x - need_y;
-        //}
-        // else if (need_y > need_x)
-        //{
-        // need_x_right += need_y - need_x;
-        //}
-
-        ROS_INFO_STREAM("new map size!");
-        ROS_INFO_STREAM(" " << need_x_left << " " << need_y_up << " "
-                            << need_x_right << " " << need_y_down);
+        // ROS_INFO_STREAM("new map size!");
+        // ROS_INFO_STREAM(" " << need_x_left << " " << need_y_up << " "
+        //<< need_x_right << " " << need_y_down);
         changeMapSize(need_x_left, need_y_up, need_x_right, need_y_down);
     }
 }
@@ -712,10 +719,9 @@ void OccupancyMap::drawLine(DataT* data, Eigen::Vector2i& startPixel,
         if (data[index] == NO_CHANGE) {
             data[index] = value;
         }
-        /*    if ( data[index] == OCCUPIED || data[index] == SAFETY_BORDER )
-            {
-              return;
-            }*/
+        if (data[index] == OCCUPIED || data[index] == SAFETY_BORDER) {
+            return;
+        }
         xerr += dx;
         yerr += dy;
         if (xerr > dist) {

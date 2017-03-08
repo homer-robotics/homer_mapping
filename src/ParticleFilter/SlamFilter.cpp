@@ -2,9 +2,9 @@
 #include <omp.h>
 
 // minimum move for translation in m
-const float MIN_MOVE_DISTANCE2 = 0.001 * 0.001;
+const float MIN_MOVE_DISTANCE2 = 0.05 * 0.05;
 // minimum turn in radiants
-const float MIN_TURN_DISTANCE2 = 0.01 * 0.01;
+const float MIN_TURN_DISTANCE2 = 0.1 * 0.01;
 
 const float M_2PI = 2 * M_PI;
 
@@ -282,6 +282,7 @@ void SlamFilter::filter(Pose currentPose,
         m_ReferencePoseOdometry = currentPose;
         m_ReferenceMeasurementTime = measurementTime;
 
+        resample();
         measure();
         ROS_INFO_STREAM("first run!");
         normalize();
@@ -296,13 +297,14 @@ void SlamFilter::filter(Pose currentPose,
 
     Transformation2D trans = m_CurrentPoseOdometry - m_ReferencePoseOdometry;
 
-    bool moving = sqr(trans.x()) + sqr(trans.y()) > 0 || sqr(trans.theta()) > 0;
+    bool moving = sqr(trans.x()) + sqr(trans.y()) > 0.0000001 ||
+                  sqr(trans.theta()) > 0.000001;
 
     // do not resample if move to small and last move is min 0.5 sec away
     // if (sqr(trans.x()) + sqr(trans.y()) < MIN_MOVE_DISTANCE2 &&
     // sqr(trans.theta()) < MIN_TURN_DISTANCE2 &&
     //(ros::Time::now() - m_LastMoveTime).toSec() > 1.0)
-    if (!moving && (ros::Time::now() - m_LastMoveTime).toSec() > 1.0)
+    if (!moving && (ros::Time::now() - m_LastMoveTime).toSec() > 0.5)
     // if(false)
     {
         ROS_DEBUG_STREAM("Move too small, will not resample.");
@@ -340,7 +342,7 @@ void SlamFilter::filter(Pose currentPose,
 
     bool update =
         ((std::fabs(transSinceLastUpdate.theta()) > m_UpdateMinMoveAngle) ||
-         (transSinceLastUpdate.magnitude() > m_UpdateMinMoveDistance)) &&
+         (transSinceLastUpdate.magnitude() > m_UpdateMinMoveDistance)) ||
         ((measurementTime - m_LastUpdateTime) > m_MaxUpdateInterval);
 
     if (m_DoMapping && update) {
@@ -353,16 +355,19 @@ void SlamFilter::filter(Pose currentPose,
         } else {
             thetaPerSecond = trans.theta() / elapsedSeconds;
         }
-        float poseVarianceX, poseVarianceY;
-        getPoseVariances(50, poseVarianceX, poseVarianceY);
+        float poseVarianceX, poseVarianceY, poseVarianceT;
+        getPoseVariances(500, poseVarianceX, poseVarianceY, poseVarianceT);
+        ROS_DEBUG_STREAM("variances: " << poseVarianceX << " " << poseVarianceY
+                                       << " " << poseVarianceT);
 
-        if (std::fabs(thetaPerSecond) < m_MaxRotationPerSecond &&
-            poseVarianceX < 0.05 && poseVarianceY < 0.05) {
+        if (poseVarianceT < 0.001 && poseVarianceX < 0.01 &&
+            poseVarianceY < 0.01 &&
+            m_EffectiveParticleNum > m_ParticleNum / 7) {
             updateMap();
             m_LastUpdatePose = likeliestPose;
             m_LastUpdateTime = measurementTime;
         } else {
-            ROS_WARN_STREAM("No mapping performed - variance to high");
+            ROS_DEBUG_STREAM("No mapping performed - variance to high");
         }
     } else {
         stream << "No map update performed.";
@@ -399,33 +404,39 @@ void SlamFilter::drift() {
     float ct = m_CurrentPoseOdometry.theta();
 
     Transformation2D odoTrans = m_CurrentPoseOdometry - m_ReferencePoseOdometry;
+    float rotToPose = atan2(odoTrans.y(), odoTrans.x()) - rt;
+
+    while (rotToPose >= M_PI) rotToPose -= M_2PI;
+    while (rotToPose < -M_PI) rotToPose += M_2PI;
+
+    float poseRotation = odoTrans.theta();
 
     // find out if driving forward or backward
-    bool backwardMove = false;
-    float scalar = odoTrans.x() * cosf(rt) + odoTrans.y() * sinf(rt);
-    if (scalar <= 0) {
-        backwardMove = true;
-    }
+    // bool backwardMove = false;
+    // float scalar = odoTrans.x() * cosf(rt) + odoTrans.y() * sinf(rt);
+    // if (scalar <= 0) {
+    // backwardMove = true;
+    //}
     float distance = sqrt(sqr(odoTrans.x()) + sqr(odoTrans.y()));
-    float deltaRot1, deltaTrans, deltaRot2;
-    if (distance < sqrt(MIN_MOVE_DISTANCE2)) {
-        deltaRot1 = odoTrans.theta();
-        deltaTrans = 0.0;
-        deltaRot2 = 0.0;
-    } else if (backwardMove) {
-        deltaRot1 = atan2(ry - cy, rx - cx) - rt;
-        deltaTrans = -distance;
-        deltaRot2 = ct - rt - deltaRot1;
-    } else {
-        deltaRot1 = atan2(odoTrans.y(), odoTrans.x()) - rt;
-        deltaTrans = distance;
-        deltaRot2 = ct - rt - deltaRot1;
-    }
+    // float deltaRot1, deltaTrans, deltaRot2;
+    // if (distance < sqrt(MIN_MOVE_DISTANCE2)) {
+    // deltaRot1 = odoTrans.theta();
+    // deltaTrans = 0.0;
+    // deltaRot2 = 0.0;
+    //} else if (backwardMove) {
+    // deltaRot1 = atan2(ry - cy, rx - cx) - rt;
+    // deltaTrans = -distance;
+    // deltaRot2 = ct - rt - deltaRot1;
+    //} else {
+    // deltaRot1 = atan2(odoTrans.y(), odoTrans.x()) - rt;
+    // deltaTrans = distance;
+    // deltaRot2 = ct - rt - deltaRot1;
+    //}
 
-    while (deltaRot1 >= M_PI) deltaRot1 -= M_2PI;
-    while (deltaRot1 < -M_PI) deltaRot1 += M_2PI;
-    while (deltaRot2 >= M_PI) deltaRot2 -= M_2PI;
-    while (deltaRot2 < -M_PI) deltaRot2 += M_2PI;
+    // while (deltaRot1 >= M_PI) deltaRot1 -= M_2PI;
+    // while (deltaRot1 < -M_PI) deltaRot1 += M_2PI;
+    // while (deltaRot2 >= M_PI) deltaRot2 -= M_2PI;
+    // while (deltaRot2 < -M_PI) deltaRot2 += M_2PI;
 
     // always leave one particle with pure displacement
     SlamParticle* particle = m_CurrentList[0];
@@ -434,44 +445,57 @@ void SlamFilter::drift() {
     particle->getRobotPose(robotX, robotY, robotTheta);
     Pose pose(robotX, robotY, robotTheta);
     // move pose
-    float posX = pose.x() + deltaTrans * cos(pose.theta() + deltaRot1);
-    float posY = pose.y() + deltaTrans * sin(pose.theta() + deltaRot1);
-    float theta = pose.theta() + deltaRot1 + deltaRot2;
+    // float posX = pose.x() + deltaTrans * cos(pose.theta() + deltaRot1);
+    // float posY = pose.y() + deltaTrans * sin(pose.theta() + deltaRot1);
+    // float theta = pose.theta() + deltaRot1 + deltaRot2;
+    float posX = pose.x() + distance * cos(pose.theta() + rotToPose);
+    float posY = pose.y() + distance * sin(pose.theta() + rotToPose);
+    float theta = pose.theta() + poseRotation;
     while (theta > M_PI) theta -= M_2PI;
     while (theta <= -M_PI) theta += M_2PI;
     // save new pose
     particle->setRobotPose(posX, posY, theta);
-    int i = 1;
 
-    // calculating parallel on 8 threats
-    // TODO: ERROR ON RESET MAPS
-    //  omp_set_num_threads(4);
-    //  #pragma omp parallel for
-    for (i = 1; i < m_ParticleNum; i++) {
+    for (int i = 1; i < m_ParticleNum; i++) {
         SlamParticle* particle = m_CurrentList[i];
         // get stored pose
         float robotX, robotY, robotTheta;
         particle->getRobotPose(robotX, robotY, robotTheta);
         Pose pose(robotX, robotY, robotTheta);
         // move pose
-        float estDeltaRot1 =
-            deltaRot1 -
-            randomGauss(m_Alpha1 * fabs(deltaRot1) + m_Alpha2 * deltaTrans);
-        float estDeltaTrans =
-            deltaTrans -
-            randomGauss(m_Alpha3 * deltaTrans +
-                        m_Alpha4 * (fabs(deltaRot1) + fabs(deltaRot2)));
-        float estDeltaRot2 =
-            deltaRot2 -
-            randomGauss(m_Alpha1 * fabs(deltaRot2) + m_Alpha2 * deltaTrans);
+        //
+        //
+        // float estDeltaRot1 =
+        // deltaRot1 + randomGauss(m_Alpha1 * fabs(poseRotation) +
+        // m_Alpha2 * fabs(distance));
+        // float estDeltaTrans =
+        // deltaTrans -
+        // randomGauss(m_Alpha3 * deltaTrans +
+        // m_Alpha4 o (fabs(deltaRot1) + fabs(deltaRot2)));
+        float estDist = distance + randomGauss(m_Alpha3 * fabs(distance) +
+                                               m_Alpha4 * (fabs(poseRotation)));
+        // float estDeltaRot2 =
+        // deltaRot2 -
+        // randomGauss(m_Alpha1 * fabs(deltaRot2) + m_Alpha2 * deltaTrans);
+        // float estDeltaRot2 = poseRotation +
+        // randomGauss(m_Alpha1 * 2 * fabs(poseRotation) +
+        // m_Alpha2 * fabs(distance));
 
-        float posX = pose.x() +
-                     estDeltaTrans * cos(pose.theta() + estDeltaRot1) +
-                     randomGauss(m_Alpha5 * fabs(estDeltaRot1 + estDeltaRot2));
-        float posY = pose.y() +
-                     estDeltaTrans * sin(pose.theta() + estDeltaRot1) +
-                     randomGauss(m_Alpha5 * fabs(estDeltaRot1 + estDeltaRot2));
-        float theta = pose.theta() + estDeltaRot1 + estDeltaRot2;
+        float estRotToPose =
+            rotToPose + randomGauss(m_Alpha1 * fabs(poseRotation) +
+                                    m_Alpha2 * fabs(distance));
+
+        float estDeltaRot =
+            poseRotation + randomGauss(m_Alpha1 * fabs(poseRotation) +
+                                       m_Alpha2 * fabs(distance));
+
+        float posX = pose.x() + estDist * cos(pose.theta() + estRotToPose) +
+                     randomGauss(m_Alpha5 * fabs(estDeltaRot)) +
+                     randomGauss(0.0004);
+        float posY = pose.y() + estDist * sin(pose.theta() + estRotToPose) +
+                     randomGauss(m_Alpha5 * fabs(estDeltaRot)) +
+                     randomGauss(0.0004);
+        float theta = pose.theta() + estDeltaRot + randomGauss(0.00005);
 
         // save new pose
         while (theta > M_PI) theta -= M_2PI;
@@ -554,7 +578,7 @@ void SlamFilter::reduceParticleNumber(int newParticleNum) {
 }
 
 Pose SlamFilter::getLikeliestPose(ros::Time poseTime) {
-    float percentage = 0.4;  // TODO param? //test
+    float percentage = 1;  // TODO param? //test
     float sumX = 0, sumY = 0, sumDirX = 0, sumDirY = 0;
     int numParticles = static_cast<int>(percentage / 100 * m_ParticleNum);
     if (0 == numParticles) {
@@ -587,7 +611,7 @@ Pose SlamFilter::getLikeliestPose(ros::Time poseTime) {
 OccupancyMap* SlamFilter::getLikeliestMap() const { return m_OccupancyMap; }
 
 void SlamFilter::getPoseVariances(int particleNum, float& poseVarianceX,
-                                  float& poseVarianceY) {
+                                  float& poseVarianceY, float& poseVarianceT) {
     // the particles of m_CurrentList are sorted by their weights
     if (particleNum > m_ParticleNum || particleNum <= 0) {
         particleNum = m_ParticleNum;
@@ -595,27 +619,33 @@ void SlamFilter::getPoseVariances(int particleNum, float& poseVarianceX,
     // calculate average pose
     float averagePoseX = 0;
     float averagePoseY = 0;
+    float averagePoseT = 0;
     float robotX = 0.0;
     float robotY = 0.0;
-    float robotTheta = 0.0;
+    float robotT = 0.0;
     for (int i = 0; i < particleNum; i++) {
-        m_CurrentList[i]->getRobotPose(robotX, robotY, robotTheta);
+        m_CurrentList[i]->getRobotPose(robotX, robotY, robotT);
         averagePoseX += robotX;
         averagePoseY += robotY;
+        averagePoseT += robotT;
     }
-    averagePoseX /= particleNum;
-    averagePoseY /= particleNum;
+    averagePoseX /= (float)particleNum;
+    averagePoseY /= (float)particleNum;
+    averagePoseT /= (float)particleNum;
 
     // calculate standard deviation of pose
     poseVarianceX = 0.0;
     poseVarianceY = 0.0;
+    poseVarianceT = 0.0;
     for (int i = 0; i < particleNum; i++) {
-        m_CurrentList[i]->getRobotPose(robotX, robotY, robotTheta);
+        m_CurrentList[i]->getRobotPose(robotX, robotY, robotT);
         poseVarianceX += (averagePoseX - robotX) * (averagePoseX - robotX);
         poseVarianceY += (averagePoseY - robotY) * (averagePoseY - robotY);
+        poseVarianceT += (averagePoseT - robotT) * (averagePoseT - robotT);
     }
-    poseVarianceX /= particleNum;
-    poseVarianceY /= particleNum;
+    poseVarianceX /= (float)particleNum;
+    poseVarianceY /= (float)particleNum;
+    poseVarianceT /= (float)particleNum;
 }
 
 double SlamFilter::evaluateByContrast() {

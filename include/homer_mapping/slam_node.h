@@ -1,36 +1,37 @@
 #ifndef SLAM_NODE_H
 #define SLAM_NODE_H
 
-#include <vector>
+#include <stdlib.h>
+#include <cmath>
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <sstream>
-#include <vector>
-#include <iostream>
-#include <fstream>
 #include <sstream>
-#include <cmath>
-#include <stdlib.h>
+#include <vector>
+#include <vector>
 
 #include <homer_nav_libs/Math/Pose.h>
 
 #include <tf/transform_broadcaster.h>
 
-#include <sensor_msgs/LaserScan.h>
-#include <nav_msgs/Odometry.h>
-#include <nav_msgs/OccupancyGrid.h>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseWithCovariance.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <std_msgs/Empty.h>
-#include <std_msgs/Bool.h>
-#include <nav_msgs/Odometry.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <nav_msgs/OccupancyGrid.h>
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Odometry.h>
+#include <sensor_msgs/LaserScan.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Empty.h>
 #include <tf/tf.h>
 
-#include <homer_mapping/ParticleFilter/SlamFilter.h>
-#include <homer_mapping/ParticleFilter/HyperSlamFilter.h>
-#include <homer_nav_libs/Math/Box2D.h>
 #include <homer_mapping/OccupancyMap/OccupancyMap.h>
+#include <homer_mapping/ParticleFilter/HyperSlamFilter.h>
+#include <homer_mapping/ParticleFilter/SlamFilter.h>
+#include <homer_nav_libs/Math/Box2D.h>
 
 class OccupancyMap;
 class SlamFilter;
@@ -49,15 +50,13 @@ class HyperSlamFilter;
  * robot's position and a map out of this data. Then it sends a
  * geometry_msgs/PoseStamped and nav_msgs/OccupancyGrid message.
  */
-class SlamNode
-{
-
-public:
-
+class SlamNode {
+   public:
     /**
-     * The constructor adds the message types and prepares the module for receiving them.
+     * The constructor adds the message types and prepares the module for
+     * receiving them.
      */
-    SlamNode(ros::NodeHandle *nh);
+    SlamNode(ros::NodeHandle* nh);
 
     /**
      * This method initializes the member variables.
@@ -69,20 +68,20 @@ public:
      */
     virtual ~SlamNode();
 
-private:
-
+   private:
     /**
      * Callback methods for all incoming messages
      */
-    void callbackLaserScan( const sensor_msgs::LaserScan::ConstPtr& msg );
-    void callbackOdometry( const nav_msgs::Odometry::ConstPtr& msg );
-    void callbackUserDefPose( const geometry_msgs::Pose::ConstPtr& msg );
-    void callbackDoMapping( const std_msgs::Bool::ConstPtr& msg );
-    void callbackResetMap( const std_msgs::Empty::ConstPtr& msg );
-    void callbackLoadedMap( const nav_msgs::OccupancyGrid::ConstPtr& msg );
-    void callbackMasking( const nav_msgs::OccupancyGrid::ConstPtr& msg );
+    void callbackLaserScan(const sensor_msgs::LaserScan::ConstPtr& msg);
+    void callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg);
+    void callbackUserDefPose(const geometry_msgs::Pose::ConstPtr& msg);
+    void callbackDoMapping(const std_msgs::Bool::ConstPtr& msg);
+    void callbackResetMap(const std_msgs::Empty::ConstPtr& msg);
+    void callbackLoadedMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);
+    void callbackMasking(const nav_msgs::OccupancyGrid::ConstPtr& msg);
     void callbackResetHigh(const std_msgs::Empty::ConstPtr& msg);
-	void callbackInitialPose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
+    void callbackInitialPose(
+        const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
 
     /**
      * This function resets the current maps to the initial state.
@@ -101,16 +100,19 @@ private:
     void sendMapDataMessage(ros::Time mapTime = ros::Time::now());
 
     /**
-     * This variables stores the last odometry measurement as reference that is used
+     * This variables stores the last odometry measurement as reference that is
+     * used
      * to compute the pose of the robot during a specific laserscan.
      */
     Pose m_ReferenceOdometryPose;
 
-	Pose m_LastLikeliestPose;
+    Pose m_LastLikeliestPose;
 
     /**
-     * This variable stores the time of the last odometry measurement as reference
-     * which is used to compute the pose of the robot during a specific laserscan.
+     * This variable stores the time of the last odometry measurement as
+     * reference
+     * which is used to compute the pose of the robot during a specific
+     * laserscan.
      */
     ros::Time m_ReferenceOdometryTime;
 
@@ -131,7 +133,6 @@ private:
      */
     ros::Time m_LastMappingTime;
 
-
     /**
      * This variable stores a pointer to the hyper slam filter
      */
@@ -149,11 +150,11 @@ private:
      */
     bool m_DoMapping;
 
-	/**
-	 * Vectors used to queue laser and odom messages to find a fit
-	 */
-	std::vector<sensor_msgs::LaserScan::ConstPtr> m_laser_queue;
-	std::vector<nav_msgs::Odometry::ConstPtr> m_odom_queue;
+    /**
+     * Vectors used to queue laser and odom messages to find a fit
+     */
+    std::vector<sensor_msgs::LaserScan::ConstPtr> m_laser_queue;
+    std::vector<nav_msgs::Odometry::ConstPtr> m_odom_queue;
 
     /**
      * duration to wait between two particle filter steps
@@ -176,11 +177,11 @@ private:
     ros::Subscriber m_LoadMapSubscriber;
     ros::Subscriber m_MaskingSubscriber;
     ros::Subscriber m_ResetHighSubscriber;
-	ros::Subscriber m_InitialPoseSubscriber;
+    ros::Subscriber m_InitialPoseSubscriber;
 
     ros::Publisher m_PoseStampedPublisher;
+    ros::Publisher m_PoseArrayPublisher;
     ros::Publisher m_SLAMMapPublisher;
-
 };
 
 #endif

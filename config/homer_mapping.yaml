@@ -8,9 +8,9 @@
 
 /homer_mapping/laser_scanner/free_reading_distance: 0.8          # Minimum distance in m to be classified as free in case of errorneous measurement
 
-/particlefilter/error_values/rotation_error_rotating: 10.0       # percent
-/particlefilter/error_values/rotation_error_translating: 2.0     # degrees per meter
-/particlefilter/error_values/translation_error_translating: 1.0 # percent
+/particlefilter/error_values/rotation_error_rotating: 20.0       # percent
+/particlefilter/error_values/rotation_error_translating: 0.50     # degrees per meter
+/particlefilter/error_values/translation_error_translating: 8.0 # percent
 /particlefilter/error_values/translation_error_rotating: 0.09    # m per degree
 /particlefilter/error_values/move_jitter_while_turning: 0.05      # m per degree
 

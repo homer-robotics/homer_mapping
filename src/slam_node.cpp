@@ -27,6 +27,8 @@ SlamNode::SlamNode(ros::NodeHandle* nh) : m_HyperSlamFilter(0) {
     // advertise topics
     m_PoseStampedPublisher =
         nh->advertise<geometry_msgs::PoseStamped>("/pose", 2);
+    m_PoseArrayPublisher =
+        nh->advertise<geometry_msgs::PoseArray>("/pose_array", 2);
     m_SLAMMapPublisher =
         nh->advertise<nav_msgs::OccupancyGrid>("/homer_mapping/slam_map", 1);
 
@@ -299,6 +301,34 @@ void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg) {
                                              // to geometry_msgs::Quaternion
     poseMsg.pose.orientation = quatMsg;
     m_PoseStampedPublisher.publish(poseMsg);
+
+    geometry_msgs::PoseArray poseArray = geometry_msgs::PoseArray();
+
+    poseArray.header = poseMsg.header;
+
+    std::vector<Pose>* poses =
+        m_HyperSlamFilter->getBestSlamFilter()->getParticlePoses();
+
+    for (int i = 0; i < poses->size(); i++) {
+        geometry_msgs::Pose tmpPose = geometry_msgs::Pose();
+
+        tmpPose.position.x = poses->at(i).x();
+        tmpPose.position.y = poses->at(i).y();
+
+        tf::Quaternion quatTF =
+            tf::createQuaternionFromYaw(poses->at(i).theta());
+        geometry_msgs::Quaternion quatMsg;
+        tf::quaternionTFToMsg(quatTF,
+                              quatMsg);  // conversion from tf::Quaternion
+                                         // to geometry_msgs::Quaternion
+        tmpPose.orientation = quatMsg;
+
+        poseArray.poses.push_back(tmpPose);
+    }
+    delete poses;
+
+    m_PoseArrayPublisher.publish(poseArray);
+
     // broadcast transform map -> base_link
     // tf::Transform transform(quatTF,tf::Vector3(currentPose.x(),
     // currentPose.y(), 0.0));
