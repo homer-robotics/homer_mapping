@@ -482,7 +482,7 @@ void SlamFilter::drift() {
         // m_Alpha2 * fabs(distance));
 
         float estRotToPose =
-            rotToPose + randomGauss(m_Alpha1 * fabs(poseRotation) +
+            rotToPose + randomGauss(m_Alpha1 * 0.5 * fabs(poseRotation) +
                                     m_Alpha2 * fabs(distance));
 
         float estDeltaRot =
@@ -495,7 +495,9 @@ void SlamFilter::drift() {
         float posY = pose.y() + estDist * sin(pose.theta() + estRotToPose) +
                      randomGauss(m_Alpha5 * fabs(estDeltaRot)) +
                      randomGauss(0.0004);
-        float theta = pose.theta() + estDeltaRot + randomGauss(0.00005);
+        float theta = pose.theta() + estDeltaRot +
+                      randomGauss(2 * m_Alpha1 * fabs(poseRotation)) +
+                      randomGauss(0.00005);
 
         // save new pose
         while (theta > M_PI) theta -= M_2PI;
