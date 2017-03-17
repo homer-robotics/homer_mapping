@@ -22,9 +22,20 @@ void SlamParticle::setRobotPose(float robotX, float robotY, float robotTheta) {
   m_RobotOrientation = robotTheta;
 }
 
+void SlamParticle::setRobotPose(Pose pose){
+    m_RobotPositionX = pose.x();
+    m_RobotPositionY = pose.y();
+    m_RobotOrientation = pose.theta();
+}
+
 void SlamParticle::getRobotPose(float& robotX, float& robotY, float& robotTheta) {
   robotX = m_RobotPositionX;
   robotY = m_RobotPositionY;
   robotTheta = m_RobotOrientation;
 }
+
+Pose SlamParticle::getRobotPose(){
+    return Pose(m_RobotPositionX, m_RobotPositionY, m_RobotOrientation);
+}
+
 

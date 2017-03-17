@@ -4,6 +4,8 @@
 #include <limits.h>
 #include <omp.h>
 #include <cmath>
+#include <homer_nav_libs/Math/Transformation2D.h>
+#include <sensor_msgs/LaserScan.h>
 #include <iostream>
 
 #include <ros/ros.h>
@@ -117,13 +119,13 @@ class ParticleFilter {
      * This method drifts the particles (second step of a filter process).
      * Has to be implemented in sub-classes (pure virtual function).
      */
-    virtual void drift() = 0;
+    virtual void drift(Transformation2D odoTrans) = 0;
 
     /**
      * This method has to be implemented in sub-classes. It is used to determine
      * the weight of each particle.
      */
-    virtual void measure() = 0;
+    virtual void measure(sensor_msgs::LaserScanPtr laserData) = 0;
 
     /**
      * These two pointers point to m_ParticleListOne and to m_ParticleListTwo.

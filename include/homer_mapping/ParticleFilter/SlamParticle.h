@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include <homer_mapping/ParticleFilter/Particle.h>
+#include <homer_nav_libs/Math/Pose.h>
 
 /**
  * @class SlamParticle
@@ -47,6 +48,7 @@ class SlamParticle : public Particle
      * @param robotTheta Orientation of the robot (radiants).
      */
     void setRobotPose ( float robotX, float robotY, float robotTheta );
+    void setRobotPose (Pose pose);
 
     /**
      * Returns the content of the three members m_RobotPositionX, m_RobotPositionY, m_RobotOrientation.
@@ -55,6 +57,7 @@ class SlamParticle : public Particle
      * @param[out] robotTheta Orientation of the robot (radiants).
      */
     void getRobotPose ( float& robotX, float& robotY, float& robotTheta );
+    Pose getRobotPose ();
 
 
   private:

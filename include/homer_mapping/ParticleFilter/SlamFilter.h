@@ -64,18 +64,15 @@ class SlamFilter : public ParticleFilter<SlamParticle> {
      * as measurement and is used to weight the particles.
      * @param currentPoseOdometry Odometry data of time t.
      * @param laserData msg containing the laser measurement.
-     * @param measurementTime Time stamp of the measurement.
-     * @param filterDurationTime Returns the time that the filtering needed
      */
-    void filter(Pose currentPoseOdometry,
-                sensor_msgs::LaserScanConstPtr laserData,
-                ros::Time measurementTime, ros::Duration& filterDuration);
+    void filter(Transformation2D trans,
+                sensor_msgs::LaserScanConstPtr laserData);
 
     /**
      * @return The Pose of the most important particle (particle with highest
      * weight).
      */
-    Pose getLikeliestPose(ros::Time poseTime = ros::Time::now());
+    Pose getLikeliestPose();
 
     /**
      * This method can be used to retrieve the most likely map that is stored by
@@ -83,11 +80,6 @@ class SlamFilter : public ParticleFilter<SlamParticle> {
      * @return Pointer to the most likely occupancy map.
      */
     OccupancyMap* getLikeliestMap() const;
-
-    /**
-     * This function prints out the list of particles to stdout via cout.
-     */
-    void printParticles() const;
 
     void resetHigh();
 
@@ -125,14 +117,6 @@ class SlamFilter : public ParticleFilter<SlamParticle> {
      * details)
      */
     void setMoveJitterWhileTurning(float mPerDegree);
-
-    /**
-     * Sets a new minimal size of a cluster of scan points which is considered
-     * in scan matching.
-     * @param  clusterSize Minimal size of a cluster in mm of scan points which
-     * is considered in scan matching.
-     */
-    void setScanMatchingClusterSize(float clusterSize);
 
     /**
      * Sets whether the map is updated or just used for self-localization.
@@ -231,19 +215,13 @@ class SlamFilter : public ParticleFilter<SlamParticle> {
      * This method drifts the particles according to the last two odometry
      * readings (time t-1 and time t).
      */
-    void drift();
+    void drift(Transformation2D odoTrans);
 
     /**
      * This method weightens each particle according to the given laser
      * measurement in m_LaserData.
      */
-    void measure();
-
-    /**
-     * This method updates the map by inserting the current laser measurement at
-     * the pose of the likeliest particle.
-     */
-    void updateMap();
+    void measure(sensor_msgs::LaserScanPtr laserData);
 
     /**
      * For weightening the particles, the filter needs a map.
@@ -252,16 +230,6 @@ class SlamFilter : public ParticleFilter<SlamParticle> {
      */
     OccupancyMap* m_OccupancyMap;
 
-    /**
-     * threshold values for when the map will be updated.
-     * The map is only updated when the robot has turned a minimal angle
-     * (m_UpdateMinMoveAngle in radiants),
-     * has moved a minimal distance (m_UpdateMinMoveDistance in m) or a maximal
-     * time has passed (m_MaxUpdateInterval)
-     */
-    float m_UpdateMinMoveAngle;
-    float m_UpdateMinMoveDistance;
-    ros::Duration m_MaxUpdateInterval;
 
     /**
      * This variable holds the rotation error that the robot makes while it is
@@ -307,30 +275,6 @@ class SlamFilter : public ParticleFilter<SlamParticle> {
     float m_Alpha5;
 
     /**
-     * The maximal rotation if mapping is performed. If the rotation is bigger,
-     * mapping is interrupted.
-     * This value may depend on the computing power, because it is influenced by
-     * the size of time intervals of mapping.
-     */
-    float m_MaxRotationPerSecond;
-
-    /**
-     * Last laser data.
-     */
-    sensor_msgs::LaserScanPtr m_CurrentLaserData;
-
-    /**
-     * Last two odometry measurements.
-     */
-    Pose m_ReferencePoseOdometry;
-    Pose m_CurrentPoseOdometry;
-
-    /**
-     * Time stamp of the last sensor measurement.
-     */
-    ros::Time m_ReferenceMeasurementTime;
-
-    /**
      * True if it is the first run of SlamFilter, false otherwise.
      */
     bool m_FirstRun;
@@ -342,18 +286,9 @@ class SlamFilter : public ParticleFilter<SlamParticle> {
      */
     bool m_DoMapping;
 
-    /** Points used in last measure() step */
-    vector<MeasurePoint> m_MeasurePoints;
-
-    /// Pose of robot during last map update
-    Pose m_LastUpdatePose;
-
-    tf::Transform m_latestTransform;
-
     /**
      *  Time stamp of the last particle filter step
      */
-    ros::Time m_LastUpdateTime;
 
     ros::Time m_LastMoveTime;
 

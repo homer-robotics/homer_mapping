@@ -88,14 +88,6 @@ void HyperSlamFilter::setMoveJitterWhileTurning ( float mPerDegree )
   }
 }
 
-void HyperSlamFilter::setScanMatchingClusterSize ( float minClusterSize )
-{
-  for ( unsigned int i=0; i < m_SlamFilters.size(); i++ )
-  {
-    m_SlamFilters[i]->setScanMatchingClusterSize( minClusterSize );
-  }
-}
-
 void HyperSlamFilter::resetHigh()
 {
   for ( unsigned int i=0; i < m_SlamFilters.size(); i++ )
@@ -125,7 +117,7 @@ void HyperSlamFilter::setRobotPose ( Pose pose, double scatterVarXY, double scat
   }
 }
 
-void HyperSlamFilter::filter ( Pose currentPose, sensor_msgs::LaserScanConstPtr laserData, ros::Time measurementTime, ros::Duration &filterDuration)
+void HyperSlamFilter::filter ( Transformation2D trans, sensor_msgs::LaserScanConstPtr laserData)
 {
   //call filter methods of all particle filters
   for ( unsigned int i=0; i < m_SlamFilters.size(); i++ )
@@ -142,7 +134,7 @@ void HyperSlamFilter::filter ( Pose currentPose, sensor_msgs::LaserScanConstPtr 
 		randOnOff = (rand() % 100) < 80;
 	}
     m_SlamFilters[i]->setMapping( m_DoMapping && randOnOff );
-    m_SlamFilters[i]->filter(currentPose, laserData, measurementTime, filterDuration);
+    m_SlamFilters[i]->filter(trans, laserData);
 	   	
   }
   if(m_SlamFilters.size() != 1)

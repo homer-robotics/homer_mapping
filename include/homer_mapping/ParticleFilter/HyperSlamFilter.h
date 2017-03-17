@@ -48,11 +48,8 @@ class HyperSlamFilter {
      * as measurement and is used to weight the particles.
      * @param currentPoseOdometry Odometry data of time t.
      * @param laserData msg containing the laser measurement.
-     * @param measurementTime Time stamp of the measurement.
-     * @param filterDurationTime Returns the time in ms that the filtering needed
      */
-    void filter(Pose currentPoseOdometry, sensor_msgs::LaserScanConstPtr laserData, ros::Time measurementTime,
-                ros::Duration  &filterDuration);
+    void filter(Transformation2D trans, sensor_msgs::LaserScanConstPtr laserData);
 
     /**
      * Computes and sets the new value for m_Alpha1.
@@ -83,12 +80,6 @@ class HyperSlamFilter {
      * @param  mPerDegree Move jitter while turning (see class constructor for details)
      */
     void setMoveJitterWhileTurning(float mPerDegree);
-
-    /**
-     * Sets a new minimal size of a cluster of scan points which is considered in scan matching.
-     * @param  clusterSize Minimal size of a cluster in mm of scan points which is considered in scan matching.
-     */
-    void setScanMatchingClusterSize(float clusterSize);
 
     /**
      * Sets whether the map is updated or just used for self-localization.
