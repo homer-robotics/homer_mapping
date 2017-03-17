@@ -2,6 +2,13 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.19 (2017-03-02)
+-------------------
+* enable smaller moves to be able to use higher odometry rates
+* no ros.spin spinOnce instead
+* use the loop_rate
+* Contributors: Florian Polster, Lisa
+
 0.1.18 (2017-02-28)
 -------------------
 
