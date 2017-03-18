@@ -93,12 +93,19 @@ private:
    */
   void sendMapDataMessage(ros::Time mapTime = ros::Time::now());
 
+  void sendTfAndPose(Pose pose);
+
+  void sendPoseArray(std::vector<Pose>* poses);
+
+  Pose getInterpolatedPose(nav_msgs::Odometry::ConstPtr pose1,
+                           nav_msgs::Odometry::ConstPtr pose2,
+                           ros::Time laserTime);
+
   /**
    * This variables stores the last odometry measurement as reference that is
    * used
    * to compute the pose of the robot during a specific laserscan.
    */
-  Pose m_ReferenceOdometryPose;
   Pose m_lastUsedPose;
 
   Pose m_LastLikeliestPose;
@@ -116,7 +123,6 @@ private:
    * compute the time for the next map send.
    */
   ros::Time m_LastMapSendTime;
-
 
   /**
    * This variable stores a pointer to the hyper slam filter
