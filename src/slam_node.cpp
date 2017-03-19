@@ -299,7 +299,7 @@ void SlamNode::callbackLoadedMap(const nav_msgs::OccupancyGrid::ConstPtr& msg)
   m_HyperSlamFilter->setMapping(false);
   m_DoMapping = false;
   ROS_INFO_STREAM("Replacing occupancy map");
-  sendMapDataMessage(ros::Time::now());
+  sendMapDataMessage(msg->info.map_load_time);
 }
 
 void SlamNode::callbackMasking(const nav_msgs::OccupancyGrid::ConstPtr& msg)

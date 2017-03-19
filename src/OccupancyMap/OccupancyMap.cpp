@@ -29,7 +29,7 @@ OccupancyMap::OccupancyMap()
 OccupancyMap::OccupancyMap(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 {
   m_metaData = msg->info;
-  m_ByteSize = m_metaData.width * m_metaData.height;
+  m_ByteSize = msg->data.size();
   initMembers();
 
   for (unsigned i = 0; i < msg->data.size(); i++)
@@ -64,10 +64,10 @@ void OccupancyMap::initMembers()
 
   m_MapPoints.resize(m_ByteSize);
 
-  m_ExploredRegion =
-      Box2D<int>(m_metaData.width / 2.1, m_metaData.height / 2.1,
-                 m_metaData.width / 1.9, m_metaData.height / 1.9);
-  maximizeChangedRegion();
+  m_ChangedRegion.enclose(
+      Box2D<int>(0, 0, m_metaData.width - 1, m_metaData.height - 1));
+  m_ExploredRegion.enclose(
+      Box2D<int>(0, 0, m_metaData.width - 1, m_metaData.height - 1));
 }
 
 OccupancyMap& OccupancyMap::operator=(const OccupancyMap& occupancyMap)
@@ -194,19 +194,6 @@ void OccupancyMap::insertLaserData(sensor_msgs::LaserScan::ConstPtr laserData,
                                    tf::Transform transform)
 {
   m_latestMapTransform = transform;
-  try
-  {
-    m_tfListener.waitForTransform("/base_link", laserData->header.frame_id,
-                                  ros::Time(0), ros::Duration(0.2));
-    m_tfListener.lookupTransform("/base_link", laserData->header.frame_id,
-                                 ros::Time(0), m_laserTransform);
-  }
-  catch (tf::TransformException ex)
-  {
-    ROS_ERROR_STREAM(ex.what());
-    ROS_ERROR_STREAM("need transformation from base_link to laser!");
-    return;
-  }
   markRobotPositionFree();
 
   std::vector<RangeMeasurement> ranges;
@@ -216,8 +203,8 @@ void OccupancyMap::insertLaserData(sensor_msgs::LaserScan::ConstPtr laserData,
   float lastValidRange = m_FreeReadingDistance;
 
   RangeMeasurement rangeMeasurement;
-  rangeMeasurement.sensorPos.x = m_laserTransform.getOrigin().getX();
-  rangeMeasurement.sensorPos.y = m_laserTransform.getOrigin().getY();
+  rangeMeasurement.sensorPos.x = getLaserTransform(laserData->header.frame_id).getOrigin().getX();
+  rangeMeasurement.sensorPos.y = getLaserTransform(laserData->header.frame_id).getOrigin().getY();
 
   for (unsigned int i = 0; i < laserData->ranges.size(); i++)
   {
@@ -248,7 +235,7 @@ void OccupancyMap::insertLaserData(sensor_msgs::LaserScan::ConstPtr laserData,
           pin.setX(cos(alpha) * range);
           pin.setY(sin(alpha) * range);
           pin.setZ(0);
-          pout = m_laserTransform * pin;
+          pout = getLaserTransform(laserData->header.frame_id) * pin;
           rangeMeasurement.endPos.x = pout.x();
           rangeMeasurement.endPos.y = pout.y();
           rangeMeasurement.range = range;
@@ -262,7 +249,7 @@ void OccupancyMap::insertLaserData(sensor_msgs::LaserScan::ConstPtr laserData,
       pin.setX(cos(alpha) * laserData->ranges[i]);
       pin.setY(sin(alpha) * laserData->ranges[i]);
       pin.setZ(0);
-      pout = m_laserTransform * pin;
+      pout = getLaserTransform(laserData->header.frame_id) * pin;
       rangeMeasurement.endPos.x = pout.x();
       rangeMeasurement.endPos.y = pout.y();
       rangeMeasurement.range = laserData->ranges[i];
@@ -484,6 +471,32 @@ double OccupancyMap::evaluateByContrast()
   return (0);
 }
 
+tf::StampedTransform OccupancyMap::getLaserTransform(std::string frame_id)
+{
+if(m_savedTransforms.find(frame_id) != m_savedTransforms.end())
+{
+    return m_savedTransforms[frame_id];
+}
+else
+{
+  try
+  {
+    m_tfListener.waitForTransform("/base_link", frame_id,
+                                  ros::Time(0), ros::Duration(0.2));
+    m_tfListener.lookupTransform("/base_link", frame_id,
+                                 ros::Time(0), m_savedTransforms[frame_id]);
+    return m_savedTransforms[frame_id];
+  }
+  catch (tf::TransformException ex)
+  {
+    ROS_ERROR_STREAM(ex.what());
+    ROS_ERROR_STREAM("need transformation from base_link to laser!");
+  }
+}
+
+return tf::StampedTransform();
+}
+
 vector<MeasurePoint>
 OccupancyMap::getMeasurePoints(sensor_msgs::LaserScanConstPtr laserData)
 {
@@ -508,7 +521,7 @@ OccupancyMap::getMeasurePoints(sensor_msgs::LaserScanConstPtr laserData)
       pin.setY(sin(alpha) * laserData->ranges[i]);
       pin.setZ(0);
 
-      pout = m_laserTransform * pin;
+      pout = getLaserTransform(laserData->header.frame_id) * pin;
 
       Point2D hitPos(pout.x(), pout.y());
 

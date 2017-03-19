@@ -280,7 +280,7 @@ void SlamFilter::filter(Transformation2D trans,
   {
     ROS_INFO_STREAM("first run!");
     m_FirstRun = false;
-    // only do mapping, save first pose as reference
+    // only do mapping
     if (m_DoMapping)
     {
       tf::Transform transform(tf::createQuaternionFromYaw(0.0),

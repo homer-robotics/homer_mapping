@@ -280,6 +280,8 @@ public:
   void changeMapSize(int x_add_left, int y_add_up, int x_add_right,
                      int y_add_down);
 
+  tf::StampedTransform getLaserTransform(std::string frame_id);
+
 protected:
   /**
    * This method increments m_MeasurementCount for pixel p.
@@ -449,7 +451,8 @@ protected:
   /**
    * ros transformation laser to base_link
    */
-  tf::StampedTransform m_laserTransform;
+  std::map<std::string, tf::StampedTransform> m_savedTransforms;
+
   tf::Transform m_latestMapTransform;
 };
 #endif
