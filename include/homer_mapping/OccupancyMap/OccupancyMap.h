@@ -124,9 +124,7 @@ public:
   /**
    * Constructor for a loaded map.
    */
-  OccupancyMap(float*& occupancyProbability, geometry_msgs::Pose origin,
-               float resolution, int width, int height,
-               Box2D<int> exploredRegion);
+  OccupancyMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);
 
   /**
    * Copy constructor, copies all members inclusive the arrays that lie behind

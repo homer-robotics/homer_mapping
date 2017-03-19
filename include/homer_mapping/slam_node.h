@@ -34,7 +34,8 @@ class HyperSlamFilter;
  * @class SlamNode
  *
  * @author Malte Knauf, Stephan Wirth, Susanne Maur (RX), David Gossow (RX),
- *         Christian Fuchs (R12), Nicolai Wojke (R14), Susanne Thierfelder (R16)
+ *         Christian Fuchs (R12), Nicolai Wojke (R14), Susanne Thierfelder
+ * (R16), Florian Polster (R28)
  *
  *
  * @brief The Simultaneous localization and mapping module
@@ -83,11 +84,6 @@ private:
   void resetMaps();
 
   /**
-   * This function processes the current odometry data in combination with the
-   * last send odometry and laser informations to pass on corresponding data
-   * to the filter threads.
-
-  /**
    * This method retrieves the current map of the slam filter and sends a map
    * data message containing the map.
    */
@@ -104,11 +100,9 @@ private:
   /**
    * This variables stores the last odometry measurement as reference that is
    * used
-   * to compute the pose of the robot during a specific laserscan.
+   * to compute the transformation to the new odometry measurement
    */
   Pose m_lastUsedPose;
-
-  Pose m_LastLikeliestPose;
 
   /**
    * This variable stores the time the last map message was sent to be able to
@@ -138,11 +132,6 @@ private:
    */
   std::vector<sensor_msgs::LaserScan::ConstPtr> m_laser_queue;
   std::vector<nav_msgs::Odometry::ConstPtr> m_odom_queue;
-
-  /**
-   * duration to wait between two particle filter steps
-   */
-  ros::Duration m_WaitDuration;
 
   /**
    * Broadcasts the transform map -> base_link

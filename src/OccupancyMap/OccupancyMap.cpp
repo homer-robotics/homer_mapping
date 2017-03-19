@@ -26,25 +26,17 @@ OccupancyMap::OccupancyMap()
   initMembers();
 }
 
-OccupancyMap::OccupancyMap(float*& occupancyProbability,
-                           geometry_msgs::Pose origin, float resolution,
-                           int width, int height, Box2D<int> exploredRegion)
+OccupancyMap::OccupancyMap(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 {
-  m_metaData.origin = origin;
-  m_metaData.resolution = resolution;
-  m_metaData.width = width;
-  m_metaData.height = height;
+  m_metaData = msg->info;
   m_ByteSize = m_metaData.width * m_metaData.height;
   initMembers();
 
-  m_ExploredRegion = exploredRegion;
-  m_ChangedRegion = exploredRegion;
-
-  for (unsigned i = 0; i < m_ByteSize; i++)
+  for (unsigned i = 0; i < msg->data.size(); i++)
   {
-    if (occupancyProbability[i] != 0.5)
+    if (msg->data[i] != -1)
     {
-      m_MapPoints[i].OccupancyProbability = occupancyProbability[i];
+      m_MapPoints[i].OccupancyProbability = msg->data[i] / 100.0;
       m_MapPoints[i].MeasurementCount = LOADED_MEASURECOUNT;
       m_MapPoints[i].OccupancyCount =
           m_MapPoints[i].OccupancyProbability * LOADED_MEASURECOUNT;

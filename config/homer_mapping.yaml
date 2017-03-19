@@ -18,7 +18,6 @@
 
 /particlefilter/particle_num: 1000
 /particlefilter/max_rotation_per_second: 0.1                     # maximal rotation in radiants if mapping is performed. if rotation is bigger, mapping is interrupted
-/particlefilter/wait_time: 0.05                                  # minimum time to wait between two slam steps in seconds
 
 #the map is only updated when the robot has turned a minimal angle, has moved a minimal distance or a maximal time has passed
 /particlefilter/update_min_move_angle: 2                         # degrees

@@ -2,18 +2,18 @@
 
 SlamNode::SlamNode(ros::NodeHandle* nh) : m_HyperSlamFilter(0)
 {
-  init();
-
   // subscribe to topics
   m_LaserScanSubscriber = nh->subscribe<sensor_msgs::LaserScan>(
       "/scan", 1, &SlamNode::callbackLaserScan, this);
   m_OdometrySubscriber = nh->subscribe<nav_msgs::Odometry>(
       "/odom", 1, &SlamNode::callbackOdometry, this);
+
   m_UserDefPoseSubscriber = nh->subscribe<geometry_msgs::Pose>(
       "/homer_mapping/userdef_pose", 1, &SlamNode::callbackUserDefPose, this);
   m_InitialPoseSubscriber =
       nh->subscribe<geometry_msgs::PoseWithCovarianceStamped>(
           "/initialpose", 1, &SlamNode::callbackInitialPose, this);
+
   m_DoMappingSubscriber = nh->subscribe<std_msgs::Bool>(
       "/homer_mapping/do_mapping", 1, &SlamNode::callbackDoMapping, this);
   m_ResetMapSubscriber = nh->subscribe<std_msgs::Empty>(
@@ -30,27 +30,22 @@ SlamNode::SlamNode(ros::NodeHandle* nh) : m_HyperSlamFilter(0)
       nh->advertise<geometry_msgs::PoseStamped>("/pose", 2);
   m_PoseArrayPublisher =
       nh->advertise<geometry_msgs::PoseArray>("/pose_array", 2);
-  m_SLAMMapPublisher =
-      nh->advertise<nav_msgs::OccupancyGrid>("/homer_mapping/slam_map", 1);
+  m_SLAMMapPublisher = nh->advertise<nav_msgs::OccupancyGrid>(
+      "/homer_mapping/slam_map", 1, true);
 
-  sendTfAndPose(Pose(0, 0, 0), ros::Time::now());
-  m_HyperSlamFilter->setRobotPose(Pose(0, 0, 0), m_ScatterVarXY,
-                                  m_ScatterVarTheta);
+  init();
 }
 
 void SlamNode::init()
 {
-  double waitTime;
-  ros::param::get("/particlefilter/wait_time", waitTime);
-  m_WaitDuration = ros::Duration(waitTime);
   ros::param::get("/selflocalization/scatter_var_xy", m_ScatterVarXY);
   ros::param::get("/selflocalization/scatter_var_theta", m_ScatterVarTheta);
 
   m_DoMapping = true;
 
   int particleNum;
-  ros::param::get("/particlefilter/particle_num", particleNum);
   int particleFilterNum;
+  ros::param::get("/particlefilter/particle_num", particleNum);
   ros::param::get("/particlefilter/hyper_slamfilter/particlefilter_num",
                   particleFilterNum);
   m_HyperSlamFilter = new HyperSlamFilter(particleFilterNum, particleNum);
@@ -59,6 +54,10 @@ void SlamNode::init()
 
   m_laser_queue.clear();
   m_odom_queue.clear();
+
+  sendTfAndPose(Pose(0, 0, 0), ros::Time::now());
+  m_HyperSlamFilter->setRobotPose(Pose(0, 0, 0), m_ScatterVarXY,
+                                  m_ScatterVarTheta);
 }
 
 SlamNode::~SlamNode()
@@ -70,19 +69,13 @@ void SlamNode::resetMaps()
 {
   ROS_INFO("Resetting maps..");
 
-  delete m_HyperSlamFilter;
+  if (m_HyperSlamFilter)
+  {
+    delete m_HyperSlamFilter;
+  }
   m_HyperSlamFilter = 0;
 
   init();
-  sendTfAndPose(Pose(0, 0, 0), ros::Time::now());
-
-  m_LastLikeliestPose.set(0.0, 0.0);
-  m_LastLikeliestPose.setTheta(0.0f);
-
-  m_HyperSlamFilter->setRobotPose(Pose(0, 0, 0), m_ScatterVarXY,
-                                  m_ScatterVarTheta);
-
-  //  sendMapDataMessage();
 }
 
 void SlamNode::callbackResetHigh(const std_msgs::Empty::ConstPtr& msg)
@@ -95,15 +88,13 @@ void SlamNode::sendMapDataMessage(ros::Time mapTime)
   std::vector<int8_t> mapData;
   nav_msgs::MapMetaData metaData;
 
-  OccupancyMap* occMap =
-      m_HyperSlamFilter->getBestSlamFilter()->getLikeliestMap();
-  occMap->getOccupancyProbabilityImage(mapData, metaData);
+  m_HyperSlamFilter->getBestSlamFilter()
+      ->getLikeliestMap()
+      ->getOccupancyProbabilityImage(mapData, metaData);
 
   nav_msgs::OccupancyGrid mapMsg;
-  std_msgs::Header header;
-  header.stamp = mapTime;
-  header.frame_id = "map";
-  mapMsg.header = header;
+  mapMsg.header.stamp = mapTime;
+  mapMsg.header.frame_id = "map";
   mapMsg.info = metaData;
   mapMsg.data = mapData;
 
@@ -130,7 +121,7 @@ void SlamNode::callbackInitialPose(
 void SlamNode::callbackLaserScan(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
   m_laser_queue.push_back(msg);
-  if (m_laser_queue.size() > 5)  // Todo param
+  if (m_laser_queue.size() > 5)
   {
     m_laser_queue.erase(m_laser_queue.begin());
   }
@@ -147,13 +138,13 @@ void SlamNode::sendTfAndPose(Pose pose, ros::Time stamp)
   tf::Quaternion quatTF = tf::createQuaternionFromYaw(pose.theta());
   geometry_msgs::Quaternion quatMsg;
   tf::quaternionTFToMsg(quatTF, quatMsg);
-                                          
+
   poseMsg.pose.orientation = quatMsg;
   m_PoseStampedPublisher.publish(poseMsg);
 
   tf::Transform transform(quatTF, tf::Vector3(pose.x(), pose.y(), 0.0));
-  m_tfBroadcaster.sendTransform(tf::StampedTransform(
-      transform, stamp, "map", "base_link"));
+  m_tfBroadcaster.sendTransform(
+      tf::StampedTransform(transform, stamp, "map", "base_link"));
 }
 
 void SlamNode::sendPoseArray(std::vector<Pose> poses)
@@ -180,7 +171,7 @@ void SlamNode::sendPoseArray(std::vector<Pose> poses)
 void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg)
 {
   m_odom_queue.push_back(msg);
-  if (m_odom_queue.size() > 5)  // Todo param
+  if (m_odom_queue.size() > 20)
   {
     m_odom_queue.erase(m_odom_queue.begin());
   }
@@ -219,6 +210,7 @@ void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg)
           m_odom_queue.at(i - 1), m_odom_queue.at(i), laserData->header.stamp);
 
       Transformation2D trans = last_interpolatedPose - m_lastUsedPose;
+      m_lastUsedPose = last_interpolatedPose;
 
       // Rotate transformation to pose theta
       float x = trans.x() * cos(-last_interpolatedPose.theta()) -
@@ -231,23 +223,20 @@ void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg)
       // SLAM STEP
       m_HyperSlamFilter->filter(rotTrans, laserData);
 
-      m_lastUsedPose = last_interpolatedPose;
-      m_LastLikeliestPose =
-          m_HyperSlamFilter->getBestSlamFilter()->getLikeliestPose();
+      Pose pose = m_HyperSlamFilter->getBestSlamFilter()->getLikeliestPose();
 
-      sendTfAndPose(m_LastLikeliestPose, laserData->header.stamp);
+      sendTfAndPose(pose, laserData->header.stamp);
 
       // send map max. every 500 ms
-      if ((laserData->header.stamp - m_LastMapSendTime).toSec() > 0.5)
+      if ((laserData->header.stamp - m_LastMapSendTime).toSec() > 0.5 &&
+          m_DoMapping)
       {
         sendMapDataMessage(laserData->header.stamp);
         m_LastMapSendTime = laserData->header.stamp;
       }
       sendPoseArray(m_HyperSlamFilter->getBestSlamFilter()->getParticlePoses());
 
-
-      //Remove already used data from queues
-      
+      // Remove already used data from queues
       m_odom_queue.erase(m_odom_queue.begin(), m_odom_queue.begin() + (i - 1));
       m_laser_queue.erase(m_laser_queue.begin(), m_laser_queue.begin() + j);
     }
@@ -268,7 +257,6 @@ Pose SlamNode::getInterpolatedPose(nav_msgs::Odometry::ConstPtr pose1,
   Pose currentOdometryPose(pose2->pose.pose.position.x,
                            pose2->pose.pose.position.y,
                            tf::getYaw(pose2->pose.pose.orientation));
-
 
   ros::Duration d1 = laserTime - lastOdometryTime;
   ros::Duration d2 = currentOdometryTime - lastOdometryTime;
@@ -300,56 +288,18 @@ void SlamNode::callbackDoMapping(const std_msgs::Bool::ConstPtr& msg)
 
 void SlamNode::callbackResetMap(const std_msgs::Empty::ConstPtr& msg)
 {
+  (void)msg;
   resetMaps();
 }
 
 void SlamNode::callbackLoadedMap(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 {
-  float res = msg->info.resolution;
-  int height = msg->info.height;  // cell size
-  int width = msg->info.width;    // cell size
-  // if(height!=width) {
-  // ROS_ERROR("Height != width in loaded map");
-  // return;
-  //}
-
-  // convert map vector from ros format to robbie probability array
-  float* map = new float[msg->data.size()];
-  // generate exploredRegion
-  int minX = INT_MIN;
-  int minY = INT_MIN;
-  int maxX = INT_MAX;
-  int maxY = INT_MAX;
-  for (size_t y = 0; y < msg->info.height; y++)
-  {
-    int yOffset = msg->info.width * y;
-    for (size_t x = 0; x < msg->info.width; x++)
-    {
-      int i = yOffset + x;
-      if (msg->data[i] == -1)
-        map[i] = 0.5;
-      else
-        map[i] = msg->data[i] / 100.0;
-
-      if (map[i] != 0.5)
-      {
-        if (minX == INT_MIN || minX > (int)x)
-          minX = (int)x;
-        if (minY == INT_MIN || minY > (int)y)
-          minY = (int)y;
-        if (maxX == INT_MAX || maxX < (int)x)
-          maxX = (int)x;
-        if (maxY == INT_MAX || maxY < (int)y)
-          maxY = (int)y;
-      }
-    }
-  }
-  Box2D<int> exploredRegion = Box2D<int>(minX, minY, maxX, maxY);
-  OccupancyMap* occMap = new OccupancyMap(map, msg->info.origin, res, width,
-                                          height, exploredRegion);
+  OccupancyMap* occMap = new OccupancyMap(msg);
   m_HyperSlamFilter->setOccupancyMap(occMap);
-  m_HyperSlamFilter->setMapping(false);  // is this already done by gui message?
+  m_HyperSlamFilter->setMapping(false);
+  m_DoMapping = false;
   ROS_INFO_STREAM("Replacing occupancy map");
+  sendMapDataMessage(ros::Time::now());
 }
 
 void SlamNode::callbackMasking(const nav_msgs::OccupancyGrid::ConstPtr& msg)
