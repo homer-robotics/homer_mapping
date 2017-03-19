@@ -146,7 +146,7 @@ class SlamFilter : public ParticleFilter<SlamParticle> {
      * particles. The pose of the particle with the highest value is the first
      * element of the vector.
      */
-    std::vector<Pose>* getParticlePoses() const;
+    std::vector<Pose> getParticlePoses() const;
 
     /**
     * @return vector of all particles

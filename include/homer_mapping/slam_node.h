@@ -95,7 +95,7 @@ private:
 
   void sendTfAndPose(Pose pose);
 
-  void sendPoseArray(std::vector<Pose>* poses);
+  void sendPoseArray(std::vector<Pose> poses);
 
   Pose getInterpolatedPose(nav_msgs::Odometry::ConstPtr pose1,
                            nav_msgs::Odometry::ConstPtr pose2,

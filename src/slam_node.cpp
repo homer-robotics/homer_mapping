@@ -158,25 +158,24 @@ void SlamNode::sendTfAndPose(Pose pose)
       transform, poseMsg.header.stamp, "map", "base_link"));
 }
 
-void SlamNode::sendPoseArray(std::vector<Pose>* poses)
+void SlamNode::sendPoseArray(std::vector<Pose> poses)
 {
   // Pose Array publishing
   geometry_msgs::PoseArray poseArray = geometry_msgs::PoseArray();
   poseArray.header.stamp = ros::Time::now();
   poseArray.header.frame_id = "/map";
 
-  for (int i = 0; i < poses->size(); i++)
+  for (int i = 0; i < poses.size(); i++)
   {
     geometry_msgs::Pose tmpPose = geometry_msgs::Pose();
-    tmpPose.position.x = poses->at(i).x();
-    tmpPose.position.y = poses->at(i).y();
-    tf::Quaternion quatTF = tf::createQuaternionFromYaw(poses->at(i).theta());
+    tmpPose.position.x = poses.at(i).x();
+    tmpPose.position.y = poses.at(i).y();
+    tf::Quaternion quatTF = tf::createQuaternionFromYaw(poses.at(i).theta());
     geometry_msgs::Quaternion quatMsg;
     tf::quaternionTFToMsg(quatTF, quatMsg);
     tmpPose.orientation = quatMsg;
     poseArray.poses.push_back(tmpPose);
   }
-  delete poses;
   m_PoseArrayPublisher.publish(poseArray);
 }
 

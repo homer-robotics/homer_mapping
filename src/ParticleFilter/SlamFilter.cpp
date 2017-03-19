@@ -168,12 +168,12 @@ void SlamFilter::setOccupancyMap(OccupancyMap* occupancyMap)
   m_OccupancyMap = occupancyMap;
 }
 
-vector<Pose>* SlamFilter::getParticlePoses() const
+vector<Pose> SlamFilter::getParticlePoses() const
 {
-  vector<Pose>* particlePoses = new vector<Pose>();
+  vector<Pose> particlePoses;
   for (int i = 0; i < m_ParticleNum; i++)
   {
-    particlePoses->push_back(m_CurrentList[i]->getRobotPose());
+    particlePoses.push_back(m_CurrentList[i]->getRobotPose());
   }
   return particlePoses;
 }
