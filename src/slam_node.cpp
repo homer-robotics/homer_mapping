@@ -33,7 +33,7 @@ SlamNode::SlamNode(ros::NodeHandle* nh) : m_HyperSlamFilter(0)
   m_SLAMMapPublisher =
       nh->advertise<nav_msgs::OccupancyGrid>("/homer_mapping/slam_map", 1);
 
-  sendTfAndPose(Pose(0, 0, 0));
+  sendTfAndPose(Pose(0, 0, 0), ros::Time::now());
   m_HyperSlamFilter->setRobotPose(Pose(0, 0, 0), m_ScatterVarXY,
                                   m_ScatterVarTheta);
 }
@@ -55,7 +55,6 @@ void SlamNode::init()
                   particleFilterNum);
   m_HyperSlamFilter = new HyperSlamFilter(particleFilterNum, particleNum);
 
-  m_ReferenceOdometryTime = ros::Time(0);
   m_LastMapSendTime = ros::Time(0);
 
   m_laser_queue.clear();
@@ -75,7 +74,7 @@ void SlamNode::resetMaps()
   m_HyperSlamFilter = 0;
 
   init();
-  sendTfAndPose(Pose(0, 0, 0));
+  sendTfAndPose(Pose(0, 0, 0), ros::Time::now());
 
   m_LastLikeliestPose.set(0.0, 0.0);
   m_LastLikeliestPose.setTheta(0.0f);
@@ -137,25 +136,24 @@ void SlamNode::callbackLaserScan(const sensor_msgs::LaserScan::ConstPtr& msg)
   }
 }
 
-void SlamNode::sendTfAndPose(Pose pose)
+void SlamNode::sendTfAndPose(Pose pose, ros::Time stamp)
 {
   geometry_msgs::PoseStamped poseMsg;
-  poseMsg.header.stamp = ros::Time(0);
+  poseMsg.header.stamp = stamp;
   poseMsg.header.frame_id = "map";
   poseMsg.pose.position.x = pose.x();
   poseMsg.pose.position.y = pose.y();
   poseMsg.pose.position.z = 0.0;
   tf::Quaternion quatTF = tf::createQuaternionFromYaw(pose.theta());
   geometry_msgs::Quaternion quatMsg;
-  tf::quaternionTFToMsg(quatTF, quatMsg);  // conversion from tf::Quaternion
-                                           // to
+  tf::quaternionTFToMsg(quatTF, quatMsg);
+                                          
   poseMsg.pose.orientation = quatMsg;
   m_PoseStampedPublisher.publish(poseMsg);
 
-  ////  //broadcast transform map -> base_link
   tf::Transform transform(quatTF, tf::Vector3(pose.x(), pose.y(), 0.0));
   m_tfBroadcaster.sendTransform(tf::StampedTransform(
-      transform, poseMsg.header.stamp, "map", "base_link"));
+      transform, stamp, "map", "base_link"));
 }
 
 void SlamNode::sendPoseArray(std::vector<Pose> poses)
@@ -182,19 +180,11 @@ void SlamNode::sendPoseArray(std::vector<Pose> poses)
 void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg)
 {
   m_odom_queue.push_back(msg);
-  static int last_i = 0;
   if (m_odom_queue.size() > 5)  // Todo param
   {
-    last_i--;
-    if (last_i < 0)
-    {
-      last_i = 0;
-    }
     m_odom_queue.erase(m_odom_queue.begin());
   }
 
-  static Pose last_interpolatedPose(0.0, 0.0, 0.0);
-  ros::Time currentOdometryTime = msg->header.stamp;
   if (m_odom_queue.size() > 1 && m_laser_queue.size() > 0)
   {
     int i, j;
@@ -202,13 +192,6 @@ void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg)
 
     for (i = m_odom_queue.size() - 1; i > 0; i--)
     {
-      // Check if we would repeat a calculation which is already done but
-      // still in the queue
-      if (m_odom_queue.at(i - 1)->header.stamp == m_ReferenceOdometryTime)
-      {
-        break;
-      }
-
       for (j = m_laser_queue.size() - 1; j > -1; j--)
       {
         //	find a laserscan in between two odometry readings (or at
@@ -230,10 +213,9 @@ void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg)
 
     if (got_match)
     {
-      last_i = i;
       sensor_msgs::LaserScan::ConstPtr laserData = m_laser_queue.at(j);
 
-      last_interpolatedPose = getInterpolatedPose(
+      Pose last_interpolatedPose = getInterpolatedPose(
           m_odom_queue.at(i - 1), m_odom_queue.at(i), laserData->header.stamp);
 
       Transformation2D trans = last_interpolatedPose - m_lastUsedPose;
@@ -244,16 +226,16 @@ void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg)
       float y = trans.y() * cos(-last_interpolatedPose.theta()) +
                 trans.x() * sin(-last_interpolatedPose.theta());
 
-      Transformation2D newTrans(x, y, trans.theta());
+      Transformation2D rotTrans(x, y, trans.theta());
 
       // SLAM STEP
-      m_HyperSlamFilter->filter(newTrans, laserData);
+      m_HyperSlamFilter->filter(rotTrans, laserData);
 
       m_lastUsedPose = last_interpolatedPose;
       m_LastLikeliestPose =
           m_HyperSlamFilter->getBestSlamFilter()->getLikeliestPose();
 
-      sendTfAndPose(m_LastLikeliestPose);
+      sendTfAndPose(m_LastLikeliestPose, laserData->header.stamp);
 
       // send map max. every 500 ms
       if ((laserData->header.stamp - m_LastMapSendTime).toSec() > 0.5)
@@ -262,6 +244,12 @@ void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg)
         m_LastMapSendTime = laserData->header.stamp;
       }
       sendPoseArray(m_HyperSlamFilter->getBestSlamFilter()->getParticlePoses());
+
+
+      //Remove already used data from queues
+      
+      m_odom_queue.erase(m_odom_queue.begin(), m_odom_queue.begin() + (i - 1));
+      m_laser_queue.erase(m_laser_queue.begin(), m_laser_queue.begin() + j);
     }
   }
 }
@@ -281,7 +269,6 @@ Pose SlamNode::getInterpolatedPose(nav_msgs::Odometry::ConstPtr pose1,
                            pose2->pose.pose.position.y,
                            tf::getYaw(pose2->pose.pose.orientation));
 
-  m_ReferenceOdometryTime = pose1->header.stamp;
 
   ros::Duration d1 = laserTime - lastOdometryTime;
   ros::Duration d2 = currentOdometryTime - lastOdometryTime;

@@ -93,7 +93,7 @@ private:
    */
   void sendMapDataMessage(ros::Time mapTime = ros::Time::now());
 
-  void sendTfAndPose(Pose pose);
+  void sendTfAndPose(Pose pose, ros::Time stamp);
 
   void sendPoseArray(std::vector<Pose> poses);
 
@@ -109,14 +109,6 @@ private:
   Pose m_lastUsedPose;
 
   Pose m_LastLikeliestPose;
-
-  /**
-   * This variable stores the time of the last odometry measurement as
-   * reference
-   * which is used to compute the pose of the robot during a specific
-   * laserscan.
-   */
-  ros::Time m_ReferenceOdometryTime;
 
   /**
    * This variable stores the time the last map message was sent to be able to
