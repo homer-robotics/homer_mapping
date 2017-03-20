@@ -306,6 +306,10 @@ void OccupancyMap::insertRanges(vector<RangeMeasurement> ranges,
       {
         continue;
       }
+      if(ranges[i].range <= m_FreeReadingDistance)
+      {
+        continue;
+      }
       Eigen::Vector2i endPixel = map_pixel[i];
 
       for (int y = endPixel.y() - 2; y <= endPixel.y() + 2; y++)
@@ -704,7 +708,8 @@ void OccupancyMap::drawLine(Eigen::Vector2i& startPixel,
     {
       continue;
     }
-    if (m_MapPoints[index].CurrentChange == NO_CHANGE)
+    if (m_MapPoints[index].CurrentChange == ::NO_CHANGE||
+        m_MapPoints[index].CurrentChange == ::FREE)
     {
       m_MapPoints[index].CurrentChange = value;
     }
