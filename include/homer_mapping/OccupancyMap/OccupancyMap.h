@@ -133,326 +133,272 @@ public:
    */
   OccupancyMap(const OccupancyMap& occupancyMap);
 
-  /**
-   * Method to init all members with default values from the configuration
-   * file. All arrays are initialized.
-   */
-  void initMembers();
 
-  /**
-   * Assignment operator, copies all members (deep copy!)
-   * @param source Source to copy from
-   * @return Reference to copied OccupancyMap
-   */
-  OccupancyMap& operator=(const OccupancyMap& source);
+    /**
+     * Method to init all members with default values from the configuration file. All arrays are initialized.
+     */
+    void initMembers();
 
-  /**
-   * Deletes all dynamically allocated memory.
-   */
-  ~OccupancyMap();
+    /**
+     * Assignment operator, copies all members (deep copy!)
+     * @param source Source to copy from
+     * @return Reference to copied OccupancyMap
+     */
+    OccupancyMap& operator=(const OccupancyMap& source);
 
-  /*
-  /**
-   * @return The resolution of the map in m.
-   */
-  //    int resolution() const;
+    /**
+     * Deletes all dynamically allocated memory.
+     */
+    ~OccupancyMap();
 
-  geometry_msgs::Pose origin() const;
+    /*
+    /**
+     * @return The resolution of the map in m.
+     */
+//    int resolution() const;
 
-  /**
-   * @return Width of the map.
-   */
-  int width() const;
+    geometry_msgs::Pose origin() const;
 
-  /**
-   * @return Height of the map.
-   */
-  int height() const;
+    /**
+     * @return Width of the map.
+     */
+    int width() const;
 
-  /**
-   * This method is used to reset all HighSensitive areas
-   */
-  void resetHighSensitive();
+    /**
+     * @return Height of the map.
+     */
+    int height() const;
+    
+    /**
+     * This method is used to reset all HighSensitive areas
+     */
+    void resetHighSensitive();
 
-  /**
-   * @return Probability of pixel p being occupied.
-   */
-  float getOccupancyProbability(Eigen::Vector2i p);
+    /**
+     * @return Probability of pixel p being occupied.
+     */
+    float getOccupancyProbability(Eigen::Vector2i p);
 
-  /**
-   * @brief This function inserts the data of a laserscan into the map.
-   *
-   * With the given data, start and end cells of a laser beam are computed and
-   * given to the
-   * method markLineFree().
-   * If the measurement is smaller than VALID_MAX_RANGE, markOccupied() is
-   * called for the endpoint.
-   * @param laserData The laser data msg.
-   */
-  void insertLaserData(sensor_msgs::LaserScan::ConstPtr laserData,
-                       tf::Transform transform);
+    /**
+     * @brief This function inserts the data of a laserscan into the map.
+     *
+     * With the given data, start and end cells of a laser beam are computed and given to the
+     * method markLineFree().
+     * If the measurement is smaller than VALID_MAX_RANGE, markOccupied() is called for the endpoint.
+     * @param laserData The laser data msg.
+     */
+    void insertLaserData( sensor_msgs::LaserScan::ConstPtr laserData, tf::Transform transform);
 
-  void insertRanges(vector<RangeMeasurement> ranges,
-                    ros::Time stamp = ros::Time::now());
+    void insertRanges( vector<RangeMeasurement> ranges , ros::Time stamp = ros::Time::now() );
 
-  /**
-   * @brief gives a list specially processed coordinates to be used for
-   * computeLaserScanProbability
-   */
-  std::vector<MeasurePoint>
-  getMeasurePoints(sensor_msgs::LaserScanConstPtr laserData);
+    /**
+     * @brief gives a list specially processed coordinates to be used for computeLaserScanProbability
+     */
+    std::vector<MeasurePoint> getMeasurePoints( sensor_msgs::LaserScanConstPtr laserData );
 
-  /**
-   * This method computes a score that describes how good the given hypothesis
-   * matches with the map
-   * @param robotPose The pose of the robot
-   * @return The "fitting factor". The higher the factor, the better the
-   * fitting.
-   *         This factor is NOT normalized, it is a positive float between 0
-   * and FLOAT_MAX
-   */
-  float computeScore(Pose robotPose, std::vector<MeasurePoint> measurePoints);
+    /**
+     * This method computes a score that describes how good the given hypothesis matches with the map
+     * @param robotPose The pose of the robot
+     * @return The "fitting factor". The higher the factor, the better the fitting.
+     *         This factor is NOT normalized, it is a positive float between 0 and FLOAT_MAX
+     */
+    float computeScore( Pose robotPose, std::vector<MeasurePoint> measurePoints );
 
-  /**
-   * @return QImage of size m_metaData.width, m_metaData.height with values of
-   * m_OccupancyProbability scaled to 0-254
-   */
-  QImage getProbabilityQImage(int trancparencyThreshold,
-                              bool showInaccessible) const;
+    /**
+     * @return QImage of size m_metaData.width, m_metaData.height with values of m_OccupancyProbability scaled to 0-254
+     */
+    QImage getProbabilityQImage(int trancparencyThreshold, bool showInaccessible) const;
 
-  // puma2::ColorImageRGB8* getUpdateImage( bool withMap=true ); TODO
+    //puma2::ColorImageRGB8* getUpdateImage( bool withMap=true ); TODO
 
-  /**
-   * Returns an "image" of the obstacles e.g. seen in the 3D scans
-   * @returns image with dark red dots in areas where the obstacles were seen
-   */
-  // puma2::ColorImageRGB8* getObstacleImage ( ); TODO
+    /**
+     * Returns an "image" of the obstacles e.g. seen in the 3D scans
+     * @returns image with dark red dots in areas where the obstacles were seen
+     */
+    //puma2::ColorImageRGB8* getObstacleImage ( ); TODO
 
-  /**
-   * Returns an "image" of occupancy probability image.
-   * @param[out] data vector containing occupancy probabilities. 0 = free, 100
-   * = occupied, -1 = NOT_KNOWN
-   * @param[out] width Width of data array
-   * @param[out] height Height of data array
-   * @param[out] resolution Resolution of the map (m_metaData.resolution)
-   */
-  void getOccupancyProbabilityImage(vector<int8_t>& data,
-                                    nav_msgs::MapMetaData& metaData);
+    /**
+     * Returns an "image" of occupancy probability image.
+     * @param[out] data vector containing occupancy probabilities. 0 = free, 100 = occupied, -1 = NOT_KNOWN
+     * @param[out] width Width of data array
+     * @param[out] height Height of data array
+     * @param[out] resolution Resolution of the map (m_metaData.resolution)
+     */
+    void getOccupancyProbabilityImage(vector<int8_t> &data, nav_msgs::MapMetaData& metaData);
 
-  /**
-   * This method marks free the position of the robot (according to its
-   * dimensions).
-   */
-  void markRobotPositionFree();
+    /**
+     * This method marks free the position of the robot (according to its dimensions).
+     */
+    void markRobotPositionFree();
 
-  /**
-   * @brief Computes the contrast of a single pixel.
-   * @param prob probability value (100=occupied, 50=NOT_KNOWN, 0=free) of a
-   * pixel.
-   * @return Contrast value from 0 (no contrast) to 1 (max. contrast) of this
-   * pixel
-   */
-  double contrastFromProbability(int8_t prob);
+    /**
+     * @brief Computes the contrast of a single pixel.
+     * @param prob probability value (100=occupied, 50=NOT_KNOWN, 0=free) of a pixel.
+     * @return Contrast value from 0 (no contrast) to 1 (max. contrast) of this pixel
+     */
+    double contrastFromProbability (int8_t prob);
 
-  /**
-   * @brief This method computes the sharpness of the occupancy grid
-   * @return Contrast value from 0 (no contrast) to 1 (max. contrast) of the
-   * map
-   */
-  double evaluateByContrast();
+    /**
+     * @brief This method computes the sharpness of the occupancy grid
+     * @return Contrast value from 0 (no contrast) to 1 (max. contrast) of the map
+     */
+    double evaluateByContrast();
 
-  /// GETTERS
+    /// GETTERS
 
-  Box2D<int> getExploredRegion()
-  {
-    return m_ExploredRegion;
-  }
-  Box2D<int> getChangedRegion()
-  {
-    return m_ChangedRegion;
-  }
+    Box2D<int> getExploredRegion() { return m_ExploredRegion; }
+    Box2D<int> getChangedRegion() { return m_ChangedRegion; }
 
-  /**
-   * Sets cells of this map to free or occupied according to maskMap
-   */
-  void applyMasking(const nav_msgs::OccupancyGrid::ConstPtr& msg);
+    /**
+     * Sets cells of this map to free or occupied according to maskMap
+     */
+     void applyMasking(const nav_msgs::OccupancyGrid::ConstPtr &msg);
 
-  void changeMapSize(int x_add_left, int y_add_up, int x_add_right,
-                     int y_add_down);
-
-  tf::StampedTransform getLaserTransform(std::string frame_id);
-
-protected:
-  /**
-   * This method increments m_MeasurementCount for pixel p.
-   * @param p Pixel that has been measured.
-   */
-  void incrementMeasurementCount(Eigen::Vector2i p);
-
-  /**
-   * This method increments the occupancy count int m_OccupancyCount for pixel
-   * p.
-   * @param p Occupied pixel.
-   */
-  void incrementOccupancyCount(Eigen::Vector2i p);
-
-  /**
-   * This method increments m_MeasurementCount and if neccessary
-   * m_OccupancyCount for all pixels.
-   */
-  void applyChanges();
-
-  void clearChanges();
-
-  /**
-   * This method scales the counts of all pixels down to the given value.
-   * @param maxCount Maximum value to which all counts are set.
-   */
-  void scaleDownCounts(int maxCount);
-
-  /**
-    * This function paints a line from a start pixel to an end pixel.
-    * The computation is made with the Bresenham algorithm.
-    * @param data array on which the line shall be painted
-    * @param startPixel starting coordinates of the beam
-    * @param endPixel ending coordinates of the beam
-    * @param value The value with which the lines are marked.
-    */
-  void drawLine(Eigen::Vector2i& startPixel,
-                Eigen::Vector2i& endPixel, char value);
-
-  /**
-   * This method computes the values for m_OccupancyProbabilities from
-   * m_MeasurementCount and m_OccupancyCount.
-   */
-  void computeOccupancyProbabilities();
-
-  /**
-   * This method sets all values of m_CurrentChanges to NO_CHANGE.
-   */
-  void clearCurrentChanges();
-
-  /**
-   * This method resets all values of m_MinChangeX, m_MaxChangeX, m_MinChangeY
-   * and m_MaxChangeY.
-   * This means that no current changes are assumed.
-   */
-  void resetChangedRegion();
-
-  /**
-   * This method updates the values of m_MinChangeX, m_MaxChangeX,
-   * m_MinChangeY and m_MaxChangeY to current changes.
-   * The area around the current robot pose will be included to the changed
-   * region.
-   * @param robotPose The current pose of the robot.
-   */
-  void updateChangedRegion(Pose robotPose);
-
-  /**
-   * This method sets all values of m_MinChangeX, m_MaxChangeX, m_MinChangeY
-   * and m_MaxChangeY
-    * to initial values so that the complete map will be processed.
-   */
-  void maximizeChangedRegion();
-
-  /**
-   * This method resets all values of m_ExploredX, m_MaxExploredX,
-   * m_MinExploredY and m_MaxExploredY.
-   */
-  void resetExploredRegion();
+	 void changeMapSize(int x_add_left, int y_add_up, int x_add_right, int y_add_down );
 
 
-  /**
-   * Stores the metadata of the map
-   */
-  nav_msgs::MapMetaData m_metaData;
+  protected:
 
-  /**
-   * Stores the size of the map arrays, i.e. m_metaData.width *
-   * m_metaData.height
-   * for faster computation.
-   */
-  unsigned m_ByteSize;
+    /**
+     * This method increments m_MeasurementCount for pixel p.
+     * @param p Pixel that has been measured.
+     */
+    void incrementMeasurementCount(Eigen::Vector2i p);
 
-  /**
-   * Array to store occupancy probability values.
-   * Values between 0 and 1.
-   */
-  float* m_OccupancyProbability;
+    /**
+     * This method increments the occupancy count int m_OccupancyCount for pixel p.
+     * @param p Occupied pixel.
+     */
+    void incrementOccupancyCount(Eigen::Vector2i p);
 
-  // Counts how often a pixel is hit by a measurement.
-  unsigned short* m_MeasurementCount;
+    /**
+     * This method increments m_MeasurementCount and if neccessary m_OccupancyCount for all pixels.
+     */
+    void applyChanges();
 
-  // Counts how often a pixel is hit by a measurement that says the pixel is
-  // occupied.
-  unsigned short* m_OccupancyCount;
+    void clearChanges();
 
-  // Used for setting flags for cells, that have been modified during the
-  // current update.
-  unsigned char* m_CurrentChanges;
+    /**
+     * This method scales the counts of all pixels down to the given value.
+     * @param maxCount Maximum value to which all counts are set.
+     */
+    void scaleDownCounts(int maxCount);
 
-  // Used for high Sensitive areas
-  unsigned short* m_HighSensitive;
+   /**
+     * This function paints a line from a start pixel to an end pixel.
+     * The computation is made with the Bresenham algorithm.
+     * @param data array on which the line shall be painted
+     * @param startPixel starting coordinates of the beam
+     * @param endPixel ending coordinates of the beam
+     * @param value The value with which the lines are marked.
+     */
+    template<class DataT>
+    void drawLine(DataT* data, Eigen::Vector2i& startPixel, Eigen::Vector2i& endPixel, char value);
+
+    /**
+     * This method computes the values for m_OccupancyProbabilities from m_MeasurementCount and m_OccupancyCount.
+     */
+    void computeOccupancyProbabilities();
+
+    /**
+     * This method sets all values of m_CurrentChanges to NO_CHANGE.
+     */
+    void clearCurrentChanges();
+
+    /**
+     * This method resets all values of m_MinChangeX, m_MaxChangeX, m_MinChangeY and m_MaxChangeY.
+     * This means that no current changes are assumed.
+     */
+    void resetChangedRegion();
+
+    /**
+     * This method updates the values of m_MinChangeX, m_MaxChangeX, m_MinChangeY and m_MaxChangeY to current changes.
+     * The area around the current robot pose will be included to the changed region.
+     * @param robotPose The current pose of the robot.
+     */
+    void updateChangedRegion(Pose robotPose);
+
+    /**
+     * This method sets all values of m_MinChangeX, m_MaxChangeX, m_MinChangeY and m_MaxChangeY
+      * to initial values so that the complete map will be processed.
+     */
+    void maximizeChangedRegion();
+
+    /**
+     * This method resets all values of m_ExploredX, m_MaxExploredX, m_MinExploredY and m_MaxExploredY.
+     */
+    void resetExploredRegion();
+
+    /**
+     * Deletes all allocated members.
+     */
+     void cleanUp();
+
+	/**
+	 * Stores the metadata of the map
+	 */
+	nav_msgs::MapMetaData m_metaData;
 
 
-  struct PixelValue
-  {
-    float OccupancyProbability;
-    unsigned short MeasurementCount;
-    unsigned short OccupancyCount;
-    unsigned char CurrentChange;
-    unsigned short HighSensitive;
+    /**
+     * Stores the size of the map arrays, i.e. m_metaData.width * m_metaData.height
+     * for faster computation.
+     */
+    unsigned m_ByteSize;
 
-    PixelValue()
-    {
-        OccupancyProbability = UNKNOWN_LIKELIHOOD;
-        OccupancyCount = 0;
-        MeasurementCount = 0;
-        CurrentChange = NO_CHANGE;
-        HighSensitive = 0;
-    }
-  };
+    /**
+     * Array to store occupancy probability values.
+     * Values between 0 and 1.
+     */
+    float* m_OccupancyProbability;
 
-  std::vector<PixelValue> m_MapPoints;
+    // Counts how often a pixel is hit by a measurement.
+    unsigned short* m_MeasurementCount;
 
-  /**
-   * Store values from config files.
-   */
-  // minimum range classified as free in case of errorneous laser measurement
-  float m_FreeReadingDistance;
-  // enables checking to avoid matching front- and backside of an obstacle,
-  // e.g. wall
-  bool m_BacksideChecking;
-  // leaves a small border around obstacles unchanged when inserting a laser
-  // scan
-  bool m_ObstacleBorders;
-  // minimum distance in m between two samples for probability calculation
-  float m_MeasureSamplingStep;
+    // Counts how often a pixel is hit by a measurement that says the pixel is occupied.
+    unsigned short* m_OccupancyCount;
 
-  // bool to reset high_sensitive Areas on the next iteration
-  bool m_reset_high;
+    // Used for setting flags for cells, that have been modified during the current update.
+    unsigned char* m_CurrentChanges;
+    
+    // Used for high Sensitive areas
+    unsigned short* m_HighSensitive;
 
-  /**
-   * Defines a bounding box around the changes in the current map.
-   */
-  Box2D<int> m_ChangedRegion;
+    /**
+     * Store values from config files.
+     */
+    //minimum range classified as free in case of errorneous laser measurement
+    float m_FreeReadingDistance;
+    //enables checking to avoid matching front- and backside of an obstacle, e.g. wall
+    bool m_BacksideChecking;
+    //leaves a small border around obstacles unchanged when inserting a laser scan
+    bool m_ObstacleBorders;
+    //minimum distance in m between two samples for probability calculation
+    float m_MeasureSamplingStep;
+    
+    //bool to reset high_sensitive Areas on the next iteration
+    bool m_reset_high;
 
-  /**
-   * Defines a bounding box around the area in the map, which is already
-   * explored.
-   */
-  Box2D<int> m_ExploredRegion;
+    /**
+     * Defines a bounding box around the changes in the current map.
+     */
+    Box2D<int> m_ChangedRegion;
 
-  /**
-   * ros transform listener
-   */
-  tf::TransformListener m_tfListener;
+    /**
+     * Defines a bounding box around the area in the map, which is already explored.
+     */
+    Box2D<int> m_ExploredRegion;
 
-  /**
-   * ros transformation laser to base_link
-   */
-  std::map<std::string, tf::StampedTransform> m_savedTransforms;
+    /**
+     * ros transform listener
+     */
+    tf::TransformListener m_tfListener;
+    
+    /**
+     * ros transformation laser to base_link
+     */    
+    tf::StampedTransform m_laserTransform;
+    tf::Transform m_latestMapTransform;
 
-  tf::Transform m_latestMapTransform;
 };
 #endif

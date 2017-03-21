@@ -1,12 +1,12 @@
 #ifndef HYPERSLAMFILTER_H
 #define HYPERSLAMFILTER_H
 
-#include <vector>
-#include <homer_mapping/ParticleFilter/ParticleFilter.h>
-#include <homer_mapping/ParticleFilter/SlamParticle.h>
-#include <homer_mapping/ParticleFilter/SlamFilter.h>
-#include <homer_nav_libs/Math/Pose.h>
 #include <homer_mapping/OccupancyMap/OccupancyMap.h>
+#include <homer_mapping/ParticleFilter/ParticleFilter.h>
+#include <homer_mapping/ParticleFilter/SlamFilter.h>
+#include <homer_mapping/ParticleFilter/SlamParticle.h>
+#include <homer_nav_libs/Math/Pose.h>
+#include <vector>
 
 #include <sensor_msgs/LaserScan.h>
 
@@ -17,17 +17,29 @@ class OccupancyMap;
  *
  * @author Malte Knauf, Stephan Wirth, Susanne Maur
  *
- * @brief This class is used to determine the robot's most likely pose with given map and given laser data.
+ * @brief This class is used to determine the robot's most likely pose with
+ * given map and given laser data.
  *
- * A particle filter is a descrete method to describe and compute with a probability distribution.
- * This particle filter uses an occupancy map to determine the probability of robot states.
- * The robot states are stored in a particle together with their weight @see SlamParticle.
+ * A particle filter is a descrete method to describe and compute with a
+ * probability distribution.
+ * This particle filter uses an occupancy map to determine the probability of
+ * robot states.
+ * The robot states are stored in a particle together with their weight @see
+ * SlamParticle.
  *
  * @see SlamParticle
  * @see ParticleFilter
  * @see OccupancyMap
  */
-class HyperSlamFilter {
+class HyperSlamFilter
+{
+public:
+  /**
+    * This constructor initializes the random number generator and sets the
+   * member variables to the given values.
+    * @param particleNum Number of particleFilters to use.
+    */
+  HyperSlamFilter(int particleFilterNum, int particleNum);
 
   public:
 
