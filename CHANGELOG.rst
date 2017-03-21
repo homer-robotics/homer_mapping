@@ -2,8 +2,8 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.21 (2017-03-21)
+-------------------
 * clang format
 * merge with clang format
 * clang format
