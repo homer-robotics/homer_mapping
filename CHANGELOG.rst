@@ -2,6 +2,28 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* clang format
+* merge with clang format
+* clang format
+* clang merge
+* autoformat
+* lazy pose array publisher
+* send merged map on masking update
+* dont paint contrast border arround error points
+* when map was loaded transform wasn't fetched -> fixed
+* removed unused parameter - added info output - changed to simpler interface
+* use right stamp for transform
+* remove pointer
+* refactor
+* mapping with support for holonomic odometry readings
+* more rotational diversity
+* holonmic drive particles
+* use dynamic laser frame and don't hang on startup when transform is not there
+* do map update at max all 0.2 sec not automatically all 0.2 sec
+* Contributors: Florian Polster, Lisa, Niklas Yann Wettengel
+
 0.1.19 (2017-03-02)
 -------------------
 * enable smaller moves to be able to use higher odometry rates
