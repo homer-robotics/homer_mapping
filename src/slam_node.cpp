@@ -305,11 +305,9 @@ void SlamNode::callbackLoadedMap(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 void SlamNode::callbackMasking(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 {
   m_HyperSlamFilter->applyMasking(msg);
+  sendMapDataMessage(ros::Time::now());
 }
 
-/**
- * @brief main function
- */
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "homer_mapping");
