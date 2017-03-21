@@ -149,23 +149,26 @@ void SlamNode::sendTfAndPose(Pose pose, ros::Time stamp)
 
 void SlamNode::sendPoseArray(std::vector<Pose> poses)
 {
-  // Pose Array publishing
-  geometry_msgs::PoseArray poseArray = geometry_msgs::PoseArray();
-  poseArray.header.stamp = ros::Time::now();
-  poseArray.header.frame_id = "/map";
-
-  for (int i = 0; i < poses.size(); i++)
+  if (m_PoseArrayPublisher.getNumSubscribers() > 0)
   {
-    geometry_msgs::Pose tmpPose = geometry_msgs::Pose();
-    tmpPose.position.x = poses.at(i).x();
-    tmpPose.position.y = poses.at(i).y();
-    tf::Quaternion quatTF = tf::createQuaternionFromYaw(poses.at(i).theta());
-    geometry_msgs::Quaternion quatMsg;
-    tf::quaternionTFToMsg(quatTF, quatMsg);
-    tmpPose.orientation = quatMsg;
-    poseArray.poses.push_back(tmpPose);
+    // Pose Array publishing
+    geometry_msgs::PoseArray poseArray = geometry_msgs::PoseArray();
+    poseArray.header.stamp = ros::Time::now();
+    poseArray.header.frame_id = "/map";
+
+    for (int i = 0; i < poses.size(); i++)
+    {
+      geometry_msgs::Pose tmpPose = geometry_msgs::Pose();
+      tmpPose.position.x = poses.at(i).x();
+      tmpPose.position.y = poses.at(i).y();
+      tf::Quaternion quatTF = tf::createQuaternionFromYaw(poses.at(i).theta());
+      geometry_msgs::Quaternion quatMsg;
+      tf::quaternionTFToMsg(quatTF, quatMsg);
+      tmpPose.orientation = quatMsg;
+      poseArray.poses.push_back(tmpPose);
+    }
+    m_PoseArrayPublisher.publish(poseArray);
   }
-  m_PoseArrayPublisher.publish(poseArray);
 }
 
 void SlamNode::callbackOdometry(const nav_msgs::Odometry::ConstPtr& msg)
