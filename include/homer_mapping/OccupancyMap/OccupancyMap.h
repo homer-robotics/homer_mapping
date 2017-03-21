@@ -318,8 +318,8 @@ protected:
     * @param endPixel ending coordinates of the beam
     * @param value The value with which the lines are marked.
     */
-  void drawLine(Eigen::Vector2i& startPixel,
-                Eigen::Vector2i& endPixel, char value);
+  void drawLine(Eigen::Vector2i& startPixel, Eigen::Vector2i& endPixel,
+                char value);
 
   /**
    * This method computes the values for m_OccupancyProbabilities from
@@ -361,7 +361,6 @@ protected:
    */
   void resetExploredRegion();
 
-
   /**
    * Stores the metadata of the map
    */
@@ -394,7 +393,6 @@ protected:
   // Used for high Sensitive areas
   unsigned short* m_HighSensitive;
 
-
   struct PixelValue
   {
     float OccupancyProbability;
@@ -405,11 +403,11 @@ protected:
 
     PixelValue()
     {
-        OccupancyProbability = UNKNOWN_LIKELIHOOD;
-        OccupancyCount = 0;
-        MeasurementCount = 0;
-        CurrentChange = NO_CHANGE;
-        HighSensitive = 0;
+      OccupancyProbability = UNKNOWN_LIKELIHOOD;
+      OccupancyCount = 0;
+      MeasurementCount = 0;
+      CurrentChange = NO_CHANGE;
+      HighSensitive = 0;
     }
   };
 

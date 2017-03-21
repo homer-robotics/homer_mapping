@@ -203,8 +203,10 @@ void OccupancyMap::insertLaserData(sensor_msgs::LaserScan::ConstPtr laserData,
   float lastValidRange = m_FreeReadingDistance;
 
   RangeMeasurement rangeMeasurement;
-  rangeMeasurement.sensorPos.x = getLaserTransform(laserData->header.frame_id).getOrigin().getX();
-  rangeMeasurement.sensorPos.y = getLaserTransform(laserData->header.frame_id).getOrigin().getY();
+  rangeMeasurement.sensorPos.x =
+      getLaserTransform(laserData->header.frame_id).getOrigin().getX();
+  rangeMeasurement.sensorPos.y =
+      getLaserTransform(laserData->header.frame_id).getOrigin().getY();
 
   for (unsigned int i = 0; i < laserData->ranges.size(); i++)
   {
@@ -306,7 +308,7 @@ void OccupancyMap::insertRanges(vector<RangeMeasurement> ranges,
       {
         continue;
       }
-      if(ranges[i].range <= m_FreeReadingDistance)
+      if (ranges[i].range <= m_FreeReadingDistance)
       {
         continue;
       }
@@ -477,28 +479,28 @@ double OccupancyMap::evaluateByContrast()
 
 tf::StampedTransform OccupancyMap::getLaserTransform(std::string frame_id)
 {
-if(m_savedTransforms.find(frame_id) != m_savedTransforms.end())
-{
-    return m_savedTransforms[frame_id];
-}
-else
-{
-  try
+  if (m_savedTransforms.find(frame_id) != m_savedTransforms.end())
   {
-    m_tfListener.waitForTransform("/base_link", frame_id,
-                                  ros::Time(0), ros::Duration(0.2));
-    m_tfListener.lookupTransform("/base_link", frame_id,
-                                 ros::Time(0), m_savedTransforms[frame_id]);
     return m_savedTransforms[frame_id];
   }
-  catch (tf::TransformException ex)
+  else
   {
-    ROS_ERROR_STREAM(ex.what());
-    ROS_ERROR_STREAM("need transformation from base_link to laser!");
+    try
+    {
+      m_tfListener.waitForTransform("/base_link", frame_id, ros::Time(0),
+                                    ros::Duration(0.2));
+      m_tfListener.lookupTransform("/base_link", frame_id, ros::Time(0),
+                                   m_savedTransforms[frame_id]);
+      return m_savedTransforms[frame_id];
+    }
+    catch (tf::TransformException ex)
+    {
+      ROS_ERROR_STREAM(ex.what());
+      ROS_ERROR_STREAM("need transformation from base_link to laser!");
+    }
   }
-}
 
-return tf::StampedTransform();
+  return tf::StampedTransform();
 }
 
 vector<MeasurePoint>
@@ -708,7 +710,7 @@ void OccupancyMap::drawLine(Eigen::Vector2i& startPixel,
     {
       continue;
     }
-    if (m_MapPoints[index].CurrentChange == ::NO_CHANGE||
+    if (m_MapPoints[index].CurrentChange == ::NO_CHANGE ||
         m_MapPoints[index].CurrentChange == ::FREE)
     {
       m_MapPoints[index].CurrentChange = value;
