@@ -793,7 +793,7 @@ void OccupancyMap::clearChanges()
 
 void OccupancyMap::incrementMeasurementCount(Eigen::Vector2i p)
 {
-  if (p.x() >= m_metaData.width || p.y() >= m_metaData.height)
+  if (p.x() < 0 || p.x() >= m_metaData.width || p.y() < 0 || p.y() >= m_metaData.height)
   {
     return;
   }
@@ -808,7 +808,7 @@ void OccupancyMap::incrementMeasurementCount(Eigen::Vector2i p)
 
 void OccupancyMap::incrementOccupancyCount(Eigen::Vector2i p)
 {
-  if (p.x() >= m_metaData.width || p.y() >= m_metaData.height)
+  if (p.x() < 0 || p.x() >= m_metaData.width || p.y() < 0 || p.y() >= m_metaData.height)
   {
     return;
   }
