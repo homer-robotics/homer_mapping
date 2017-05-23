@@ -112,8 +112,15 @@ void SlamNode::callbackUserDefPose(const geometry_msgs::Pose::ConstPtr& msg)
 void SlamNode::callbackInitialPose(
     const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
-  Pose userdef_pose(msg->pose.pose.position.x, msg->pose.pose.position.y,
-                    tf::getYaw(msg->pose.pose.orientation));
+	tf::StampedTransform transform;
+	try {
+		m_tfListener.lookupTransform(msg->header.frame_id, "/map", msg->header.stamp, transform);
+	} catch (tf::TransformException &ex) {
+		ROS_ERROR("%s",ex.what());
+		return;
+	}
+  Pose userdef_pose(transform.getOrigin().x(), transform.getOrigin().y(),
+                    tf::getYaw(transform.getRotation()));
   m_HyperSlamFilter->setRobotPose(userdef_pose, m_ScatterVarXY,
                                   m_ScatterVarTheta);
 }
