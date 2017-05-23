@@ -112,10 +112,22 @@ void SlamNode::callbackUserDefPose(const geometry_msgs::Pose::ConstPtr& msg)
 void SlamNode::callbackInitialPose(
     const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
-  Pose userdef_pose(msg->pose.pose.position.x, msg->pose.pose.position.y,
-                    tf::getYaw(msg->pose.pose.orientation));
-  m_HyperSlamFilter->setRobotPose(userdef_pose, m_ScatterVarXY,
-                                  m_ScatterVarTheta);
+	tf::StampedTransform transform;
+	try {
+        if (m_tfListener.waitForTransform("/map", msg->header.frame_id, msg->header.stamp, ros::Duration(1.0) )) {
+		    m_tfListener.lookupTransform("/map", msg->header.frame_id, msg->header.stamp, transform);
+        } else {
+		    m_tfListener.lookupTransform("/map", msg->header.frame_id, ros::Time(0), transform);
+        }
+	} catch (tf::TransformException &ex) {
+		ROS_ERROR("%s",ex.what());
+		return;
+	}
+    tf::Vector3 targetPos(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
+    targetPos = transform * targetPos;
+    double targetYaw = tf::getYaw(transform * tf::Quaternion(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w));
+    Pose userdef_pose(targetPos.getX(), targetPos.getY(), targetYaw);
+    m_HyperSlamFilter->setRobotPose(userdef_pose, m_ScatterVarXY, m_ScatterVarTheta);
 }
 
 void SlamNode::callbackLaserScan(const sensor_msgs::LaserScan::ConstPtr& msg)

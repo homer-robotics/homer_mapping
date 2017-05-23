@@ -138,6 +138,8 @@ private:
    */
   tf::TransformBroadcaster m_tfBroadcaster;
 
+  tf::TransformListener m_tfListener;
+
   /**
    * subscribers and publishers
    */
