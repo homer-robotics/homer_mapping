@@ -2,8 +2,8 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.37 (2017-11-08)
+-------------------
 * Merge branch 'master' of gitlab.uni-koblenz.de:robbie/homer_mapping
 * parameterize mapping with different config files
 * Contributors: Raphael Memmesheimer
