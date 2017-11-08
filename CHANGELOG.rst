@@ -2,6 +2,12 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge branch 'master' of gitlab.uni-koblenz.de:robbie/homer_mapping
+* parameterize mapping with different config files
+* Contributors: Raphael Memmesheimer
+
 0.1.21 (2017-03-21)
 -------------------
 * clang format
