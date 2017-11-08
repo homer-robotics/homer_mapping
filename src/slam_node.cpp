@@ -156,7 +156,7 @@ void SlamNode::sendTfAndPose(Pose pose, ros::Time stamp)
 
   tf::Transform transform(quatTF, tf::Vector3(pose.x(), pose.y(), 0.0));
   m_tfBroadcaster.sendTransform(
-      tf::StampedTransform(transform, stamp, "map", "base_link"));
+      tf::StampedTransform(transform, stamp, "base_footprint", "map"));
 }
 
 void SlamNode::sendPoseArray(std::vector<Pose> poses)
