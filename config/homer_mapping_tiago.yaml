@@ -1,0 +1,30 @@
+/homer_mapping/size: 35 #size of one edge of the map in m. map is quadratic
+/homer_mapping/resolution: 0.05 #meter per cell
+
+#map config values
+/homer_mapping/backside_checking: false #Enable checking to avoid matching front- and backside of obstacles, e.g. walls. Useful when creating high resolution maps
+/homer_mapping/obstacle_borders: true #Leaves a small border around obstacles unchanged when inserting a laser scan. Improves stability of generated map
+/homer_mapping/measure_sampling_step: 0.15 #Minimum distance in m between two samples for probability calculation
+
+/homer_mapping/laser_scanner/free_reading_distance: 0.8 # Minimum distance in m to be classified as free in case of errorneous measurement
+
+/particlefilter/error_values/rotation_error_rotating: 3.0 #percent
+/particlefilter/error_values/rotation_error_translating: 0.0000000001 #degrees per meter
+/particlefilter/error_values/translation_error_translating: 2.0 #percent
+/particlefilter/error_values/translation_error_rotating: 0.01 #m per degree
+/particlefilter/error_values/move_jitter_while_turning: 0.05 #30.0 #m per degree
+
+
+/particlefilter/hyper_slamfilter/particlefilter_num: 1
+
+/particlefilter/particle_num: 1000
+/particlefilter/max_rotation_per_second: 1.0 #maximal rotation in radiants if mapping is performed. if rotation is bigger, mapping is interrupted
+/particlefilter/wait_time: 0.08 #minimum time to wait between two slam steps in seconds
+
+#the map is only updated when the robot has turned a minimal angle, has moved a minimal distance or a maximal time has passed
+/particlefilter/update_min_move_angle: 5 # degrees
+/particlefilter/update_min_move_dist: 0.1 #m
+/particlefilter/max_update_interval: 2 #seconds
+
+/selflocalization/scatter_var_xy: 0.05 #m
+/selflocalization/scatter_var_theta: 0.2 #radiants

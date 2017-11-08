@@ -1,6 +1,7 @@
 <launch>
- <rosparam command="load" file="$(find homer_mapping)/config/homer_mapping.yaml"/>
- <node name="homer_mapping" pkg="homer_mapping" type="homer_mapping" output="screen"/>
- <node name="map_manager" pkg="homer_map_manager" type="map_manager" output="screen"/>
- <node name="poi_visualization" pkg="homer_map_manager" type="poi_visualization" output="screen"/>
+	<arg name="robot" default="blue_lisa"/>	
+	<rosparam command="load" file="$(find homer_mapping)/config/homer_mapping_$(arg robot).yaml"/>
+	<node name="homer_mapping" pkg="homer_mapping" type="homer_mapping" output="screen"/>
+	<node name="map_manager" pkg="homer_map_manager" type="map_manager" output="screen"/>
+	<node name="poi_visualization" pkg="homer_map_manager" type="poi_visualization" output="screen"/>
 </launch>

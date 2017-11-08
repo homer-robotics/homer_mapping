@@ -1,0 +1,32 @@
+/homer_mapping/size: 4                                          # size of one edge of the map in m
+/homer_mapping/resolution: 0.03                                 # m meter per cell
+
+#map config values
+/homer_mapping/backside_checking: true                          # Enable checking to avoid matching front- and backside of obstacles, e.g. walls. Useful when creating high resolution maps
+/homer_mapping/obstacle_borders: true                            # Leaves a small border around obstacles unchanged when inserting a laser scan. Improves stability of generated map
+/homer_mapping/measure_sampling_step: 0.1                        # m Minimum distance in m between two samples for probability calculation
+
+/homer_mapping/laser_scanner/free_reading_distance: 0.1         # Minimum distance in m to be classified as free in case of errorneous measurement
+
+/particlefilter/error_values/rotation_error_rotating: 20.0       # percent
+/particlefilter/error_values/rotation_error_translating: 0.05     # degrees per meter
+/particlefilter/error_values/translation_error_translating: 6.0 # percent
+/particlefilter/error_values/translation_error_rotating: 0.02    # m per degree
+/particlefilter/error_values/move_jitter_while_turning: 0.02      # m per degree
+
+/particlefilter/hyper_slamfilter/particlefilter_num: 1
+
+/particlefilter/particle_num: 1000
+/particlefilter/max_rotation_per_second: 0.1                     # maximal rotation in radiants if mapping is performed. if rotation is bigger, mapping is interrupted
+
+#the map is only updated when the robot has turned a minimal angle, has moved a minimal distance or a maximal time has passed
+/particlefilter/update_min_move_angle: 2                         # degrees
+/particlefilter/update_min_move_dist: 0.05                       # m
+/particlefilter/max_update_interval: 0.2                         # sec
+
+/selflocalization/scatter_var_xy: 0.1                            # m
+/selflocalization/scatter_var_theta: 0.2                         # radiants
+
+
+/map_manager/roi_updates: true                                   # toggles if a entering or exiting of a roi is beeing published
+map_manager/roi_polling_time: 0.5                                # sec timeinterval after which the roi status is checked 
