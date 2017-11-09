@@ -154,9 +154,16 @@ void SlamNode::sendTfAndPose(Pose pose, ros::Time stamp)
   poseMsg.pose.orientation = quatMsg;
   m_PoseStampedPublisher.publish(poseMsg);
 
+  // Publish Transform differetn for tiago and lisa
   tf::Transform transform(quatTF, tf::Vector3(pose.x(), pose.y(), 0.0));
+ // ROS_INFO_STREAM("TF before inverse");
+//  ROS_INFO_STREAM(transform);
+ // ROS_INFO_STREAM("After");
+  tf::Transform transform2 = transform.inverse();
+ // ROS_INFO_STREAM(transform2);
   m_tfBroadcaster.sendTransform(
-      tf::StampedTransform(transform, stamp, "base_footprint", "map"));
+  tf::StampedTransform(transform2, stamp, "base_footprint", "map"));
+      //     tf::StampedTransform(transform, stamp, "base_footprint", "map"));
 }
 
 void SlamNode::sendPoseArray(std::vector<Pose> poses)
