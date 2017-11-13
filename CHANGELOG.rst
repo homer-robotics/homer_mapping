@@ -2,6 +2,18 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge branch 'ld_fix_tiago_tf' into 'master'
+  Ld fix tiago tf
+  See merge request robbie/homer_mapping!16
+* fix param
+* add param
+* add parametrization
+* inverted tf
+* init branch
+* Contributors: Raphael Memmesheimer, lukas
+
 0.1.37 (2017-11-08)
 -------------------
 * Merge branch 'master' of gitlab.uni-koblenz.de:robbie/homer_mapping
