@@ -8,7 +8,7 @@
 
 /homer_mapping/laser_scanner/free_reading_distance: 0.8 # Minimum distance in m to be classified as free in case of errorneous measurement
 
-/home_mapping/map_childof_base_footprint: true # use map to footprint transformation
+/homer_mapping/map_childof_base_footprint: true # use map to footprint transformation
 
 /particlefilter/error_values/rotation_error_rotating: 3.0 #percent
 /particlefilter/error_values/rotation_error_translating: 0.0000000001 #degrees per meter
