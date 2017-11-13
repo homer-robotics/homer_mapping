@@ -128,6 +128,11 @@ private:
   bool m_DoMapping;
 
   /**
+   * true if map tf should be published as child of base_footprint
+   */
+  bool m_UseBaseFootprint = false;
+
+  /*
    * Vectors used to queue laser and odom messages to find a fit
    */
   std::vector<sensor_msgs::LaserScan::ConstPtr> m_laser_queue;
