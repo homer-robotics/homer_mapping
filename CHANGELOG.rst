@@ -2,6 +2,14 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge branch 'ld_fix_tiago_tf' into 'master'
+  Update slam_node.cpp
+  See merge request robbie/homer_mapping!17
+* Update slam_node.cpp
+* Contributors: Lukas Debald, Raphael Memmesheimer
+
 0.1.38 (2017-11-13)
 -------------------
 * Merge branch 'ld_fix_tiago_tf' into 'master'
