@@ -35,7 +35,7 @@ SlamNode::SlamNode(ros::NodeHandle* nh) : m_HyperSlamFilter(0)
 
 
   bool base_fp_param;
-  if (nh->hasParam("/home_mapping/map_childof_base_footprint"))
+  if (nh->hasParam("/homer_mapping/map_childof_base_footprint"))
     if (ros::param::get("/homer_mapping/map_childof_base_footprint", base_fp_param))
     {
        m_UseBaseFootprint = base_fp_param;
