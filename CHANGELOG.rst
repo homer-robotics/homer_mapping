@@ -2,6 +2,9 @@
 Changelog for package homer_mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.39 (2017-11-14)
 -------------------
 * Merge branch 'ld_fix_tiago_tf' into 'master'
