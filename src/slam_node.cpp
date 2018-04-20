@@ -3,10 +3,14 @@
 SlamNode::SlamNode(ros::NodeHandle* nh) : m_HyperSlamFilter(0)
 {
   // subscribe to topics
+  std::string scan_topic;
+  nh->param<std::string>("/homer_scan_topic", scan_topic, "/scan");
   m_LaserScanSubscriber = nh->subscribe<sensor_msgs::LaserScan>(
-      "/scan", 1, &SlamNode::callbackLaserScan, this);
+      scan_topic, 1, &SlamNode::callbackLaserScan, this);
+  std::string odom_topic;
+  nh->param<std::string>("/homer_odom_topic", odom_topic, "/odom");
   m_OdometrySubscriber = nh->subscribe<nav_msgs::Odometry>(
-      "/odom", 1, &SlamNode::callbackOdometry, this);
+      odom_topic, 1, &SlamNode::callbackOdometry, this);
 
   m_UserDefPoseSubscriber = nh->subscribe<geometry_msgs::Pose>(
       "/homer_mapping/userdef_pose", 1, &SlamNode::callbackUserDefPose, this);
