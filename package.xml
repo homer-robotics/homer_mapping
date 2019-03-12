@@ -38,6 +38,7 @@
   <run_depend>homer_nav_libs</run_depend>
   <run_depend>homer_mapnav_msgs</run_depend>
   <run_depend>eigen</run_depend>
+  <run_depend>explore_lite</run_depend>
   <run_depend>libqt5-core</run_depend>
   <run_depend>libqt5-gui</run_depend>
   <run_depend>libqt5-widgets</run_depend>
