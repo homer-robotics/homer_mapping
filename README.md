@@ -23,8 +23,6 @@ The homer_mapping package consists of a node with the same name. This node is re
 * `/map_manager/loaded_map (nav_msgs/OccupancyGrid)`: With this topic the current map can be replaced by another (loaded) map.
 * `/map_manager/mask_slam (nav_msgs/OccupancyGrid)`: The OccupancyGrid of this topic contains information which parts of the current map should be replaced by other values (free or occupied).
 
-Translated with www.DeepL.com/Translator
-
 ## Launch Files 
 
 * `homer_mapping.launch`: This launchfile loads the parameter file `homer_mapping.yaml` and starts the node homer_mapping and the node map_manager in the package of the same name.
@@ -34,8 +32,6 @@ Translated with www.DeepL.com/Translator
 
 
 ### homer_mapping.yaml
-
-
 
 * `/homer_mapping/size:` Size describes the size of one side of the map in meters. The map is square
 * `/homer_mapping/resolution:` Resolution is the length of one (square) cell of the map in meters
@@ -57,7 +53,3 @@ Translated with www.DeepL.com/Translator
 * `/particlefilter/max_update_interval:` ...or minimum waiting time in which the robot stands still.
 * `/selflocalization/scatter_var_xy:` Scattering of particles in x/y direction in meters when setting a user-defined pose
 * `/selflocalization/scatter_var_theta:` Scatter of particle alignment in Radiant when setting a custom pose
-
-Translated with www.DeepL.com/Translator
-
-
